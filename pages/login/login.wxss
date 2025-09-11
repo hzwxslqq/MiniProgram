@@ -1,0 +1,65 @@
+/* Login page styles */
+.login-container {
+  width: 100%;
+  padding: 80rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 80rpx;
+}
+
+.login-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.login-subtitle {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.login-form {
+  margin-bottom: 60rpx;
+}
+
+.input-group {
+  margin-bottom: 30rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+}
+
+.input-field {
+  height: 80rpx;
+  width: 100%;
+  font-size: 28rpx;
+}
+
+.error-message {
+  color: #ff4d4f;
+  font-size: 24rpx;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.login-button {
+  width: 100%;
+  font-size: 32rpx;
+  margin-top: 20rpx;
+}
+
+.register-link {
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.register-text {
+  color: #07c160;
+  font-weight: bold;
+}

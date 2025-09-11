@@ -1,0 +1,48 @@
+<!-- Login page structure -->
+<view class="container">
+  <view class="login-container">
+    <view class="login-header">
+      <text class="login-title">Welcome</text>
+      <text class="login-subtitle">Please sign in to continue</text>
+    </view>
+
+    <form class="login-form">
+      <view class="input-group">
+        <input 
+          class="input-field" 
+          placeholder="Username" 
+          value="{{username}}" 
+          bindinput="onUsernameInput"
+        />
+      </view>
+
+      <view class="input-group">
+        <input 
+          class="input-field" 
+          placeholder="Password" 
+          password="{{true}}" 
+          value="{{password}}" 
+          bindinput="onPasswordInput"
+        />
+      </view>
+
+      <view wx:if="{{errorMessage}}" class="error-message">
+        {{errorMessage}}
+      </view>
+
+      <button 
+        class="login-button button-primary" 
+        bindtap="onLogin" 
+        loading="{{loading}}"
+        disabled="{{loading}}"
+      >
+        Sign In
+      </button>
+    </form>
+
+    <view class="register-link">
+      <text>Don't have an account? </text>
+      <text class="register-text" bindtap="onRegister">Register</text>
+    </view>
+  </view>
+</view>

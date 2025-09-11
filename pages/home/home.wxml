@@ -1,0 +1,82 @@
+<!-- Home page structure -->
+<view class="container">
+  <!-- Search Bar -->
+  <view class="search-bar">
+    <input 
+      class="search-input" 
+      placeholder="Search products..." 
+      value="{{searchQuery}}" 
+      bindinput="onSearchInput" 
+      bindconfirm="onSearch"
+    />
+    <button class="search-button" bindtap="onSearch">Search</button>
+  </view>
+
+  <!-- Banner Slider -->
+  <swiper 
+    class="banner-swiper" 
+    indicator-dots="{{true}}" 
+    autoplay="{{true}}" 
+    interval="5000" 
+    duration="1000"
+  >
+    <block wx:for="{{banners}}" wx:key="id">
+      <swiper-item>
+        <image class="banner-image" src="{{item.image}}" mode="aspectFill" />
+      </swiper-item>
+    </block>
+  </swiper>
+
+  <!-- Categories -->
+  <view class="section-title">
+    <text>Categories</text>
+  </view>
+  <scroll-view class="categories-container" scroll-x="true">
+    <view 
+      class="category-item" 
+      wx:for="{{categories}}" 
+      wx:key="id" 
+      bindtap="onCategorySelect" 
+      data-category="{{item}}"
+    >
+      <image class="category-icon" src="{{item.icon}}" />
+      <text class="category-name">{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- Featured Products -->
+  <view class="section-title">
+    <text>Featured Products</text>
+  </view>
+  <view class="products-container">
+    <view 
+      class="product-card" 
+      wx:for="{{featuredProducts}}" 
+      wx:key="id"
+    >
+      <view bindtap="onViewProduct" data-product="{{item}}">
+        <image class="product-image" src="{{item.image}}" mode="aspectFill" />
+        <view class="product-info">
+          <text class="product-name">{{item.name}}</text>
+          <view class="product-price-container">
+            <text class="product-price">${{item.price}}</text>
+            <text class="product-original-price">${{item.originalPrice}}</text>
+          </view>
+          <view class="product-rating">
+            <text class="rating-stars">★</text>
+            <text class="rating-text">{{item.rating}} ({{item.reviewCount}})</text>
+          </view>
+        </view>
+      </view>
+      <view class="product-actions">
+        <button class="action-button add-cart-btn" bindtap="onAddToCart" data-product="{{item}}">Add to Cart</button>
+        <button class="action-button buy-now-btn" bindtap="onQuickOrder" data-product="{{item}}">Buy Now</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>Loading...</text>
+  </view>
+</view>

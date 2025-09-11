@@ -1,0 +1,108 @@
+<!-- Orders page structure -->
+<view class="container">
+  <view class="orders-header">
+    <text class="header-title">My Orders</text>
+  </view>
+
+  <!-- Order tabs -->
+  <view class="order-tabs">
+    <view 
+      class="tab-item {{activeTab === 'all' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="all"
+    >
+      All
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'pending' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="pending"
+    >
+      Pending
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'shipped' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="shipped"
+    >
+      Shipped
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'delivered' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="delivered"
+    >
+      Delivered
+    </view>
+  </view>
+
+  <!-- Empty orders state -->
+  <view wx:if="{{!loading && getFilteredOrders().length === 0}}" class="empty-orders">
+    <image class="empty-orders-image" src="/images/empty_orders.png" mode="aspectFit" />
+    <text class="empty-orders-text">No orders found</text>
+  </view>
+
+  <!-- Orders list -->
+  <view wx:else class="orders-list">
+    <view 
+      class="order-card" 
+      wx:for="{{getFilteredOrders()}}" 
+      wx:key="id"
+    >
+      <view class="order-header">
+        <text class="order-number">Order: {{item.orderNumber}}</text>
+        <text class="order-status {{item.status}}">{{item.statusText}}</text>
+      </view>
+      
+      <view class="order-items">
+        <view 
+          class="order-item" 
+          wx:for="{{item.items}}" 
+          wx:key="id"
+        >
+          <image class="item-image" src="{{item.image}}" mode="aspectFill" />
+          <view class="item-details">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-price">Qty: {{item.quantity}} x ${{item.price}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="order-footer">
+        <text class="order-date">{{item.createdAt}}</text>
+        <text class="order-total">Total: ${{item.totalAmount}}</text>
+      </view>
+      
+      <view class="order-actions">
+        <button 
+          wx:if="{{item.status === 'pending'}}" 
+          class="action-button pay-btn" 
+          bindtap="payOrder" 
+          data-order="{{item}}"
+        >
+          Pay Now
+        </button>
+        <button 
+          wx:if="{{item.status === 'shipped' || item.status === 'delivered'}}" 
+          class="action-button track-btn" 
+          bindtap="viewLogistics" 
+          data-order="{{item}}"
+        >
+          Track Order
+        </button>
+        <button 
+          class="action-button detail-btn" 
+          bindtap="viewOrderDetails" 
+          data-id="{{item.id}}"
+        >
+          View Details
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>Loading...</text>
+  </view>
+</view>

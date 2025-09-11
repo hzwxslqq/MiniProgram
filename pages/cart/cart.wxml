@@ -1,0 +1,90 @@
+<!-- Cart page structure -->
+<view class="container">
+  <!-- Header with edit button -->
+  <view class="cart-header flex-between">
+    <text class="header-title">Shopping Cart</text>
+    <text wx:if="{{cartItems.length > 0}}" class="edit-button" bindtap="toggleEditMode">
+      {{isEditing ? 'Done' : 'Edit'}}
+    </text>
+  </view>
+
+  <!-- Empty cart state -->
+  <view wx:if="{{!loading && cartItems.length === 0}}" class="empty-cart">
+    <image class="empty-cart-image" src="/images/empty_cart.png" mode="aspectFit" />
+    <text class="empty-cart-text">Your cart is empty</text>
+    <button class="continue-shopping-btn button-primary" bindtap="onContinueShopping">
+      Continue Shopping
+    </button>
+  </view>
+
+  <!-- Cart items -->
+  <view wx:else class="cart-content">
+    <scroll-view class="cart-items" scroll-y="true">
+      <view 
+        class="cart-item" 
+        wx:for="{{cartItems}}" 
+        wx:key="id"
+      >
+        <view class="item-selection">
+          <icon 
+            type="{{item.selected ? 'success' : 'circle'}}" 
+            size="24" 
+            bindtap="toggleItemSelection" 
+            data-id="{{item.id}}"
+          />
+        </view>
+        
+        <view class="item-details">
+          <image class="item-image" src="{{item.image}}" mode="aspectFill" />
+          <view class="item-info">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-price">${{item.price}}</text>
+          </view>
+        </view>
+        
+        <view class="item-actions">
+          <view class="quantity-control">
+            <button class="quantity-btn" bindtap="decreaseQuantity" data-id="{{item.id}}">-</button>
+            <text class="quantity">{{item.quantity}}</text>
+            <button class="quantity-btn" bindtap="increaseQuantity" data-id="{{item.id}}">+</button>
+          </view>
+          
+          <view wx:if="{{isEditing}}" class="remove-action">
+            <button class="remove-btn" bindtap="removeItem" data-id="{{item.id}}">Remove</button>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Checkout footer -->
+    <view class="cart-footer">
+      <view class="select-all">
+        <icon 
+          type="{{cartItems.length > 0 && cartItems.every(item => item.selected) ? 'success' : 'circle'}}" 
+          size="24" 
+          bindtap="selectAll"
+        />
+        <text>Select All</text>
+      </view>
+      
+      <view class="checkout-section">
+        <view class="total-price">
+          <text>Total: </text>
+          <text class="price">${{totalPrice}}</text>
+        </view>
+        <button 
+          class="checkout-btn button-primary" 
+          bindtap="onCheckout"
+          disabled="{{selectedItems.length === 0}}"
+        >
+          Checkout
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>Loading...</text>
+  </view>
+</view>
