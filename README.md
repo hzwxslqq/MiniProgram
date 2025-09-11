@@ -1,6 +1,6 @@
 # Online Store WeChat Mini-Program
 
-This is a WeChat Mini-Program for an online store that allows users to browse products, add items to cart, and process orders with payment and logistics tracking.
+This is a WeChat Mini-Program for an online store that allows users to browse products, add items to cart, and process orders with payment and logistics tracking. It includes both the frontend Mini-Program and a Node.js backend API.
 
 ## Features
 
@@ -72,12 +72,20 @@ project/
 
 ## Development
 
-To run this project:
+### Frontend (WeChat Mini-Program)
 
 1. Open WeChat Developer Tool
 2. Import this project
 3. Configure your AppID in `project.config.json`
 4. Run and debug the project
+
+### Backend (Node.js API)
+
+1. Navigate to the backend directory: `cd backend`
+2. Install dependencies: `npm install`
+3. Configure environment variables in `.env`
+4. Start the development server: `npm run dev`
+5. The API will be available at `http://localhost:3000`
 
 ## API Integration
 
