@@ -15,17 +15,13 @@ const getProducts = async (req, res) => {
       filters.$text = { $search: search };
     }
     
-    // Pagination
-    const skip = (page - 1) * limit;
-    
     // Get products
-    const products = await Product.find(filters)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
+    let products = await Product.find(filters);
     
-    // Get total count
-    const total = await Product.countDocuments(filters);
+    // Apply pagination
+    const total = products.length;
+    const skip = (page - 1) * limit;
+    products = products.slice(skip, skip + parseInt(limit));
     
     res.json({
       message: 'Products retrieved successfully',

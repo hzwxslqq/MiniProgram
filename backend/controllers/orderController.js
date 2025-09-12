@@ -9,7 +9,7 @@ const getOrders = async (req, res) => {
     const userId = req.user.id;
     
     // Get orders
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ userId }, { sort: { createdAt: -1 } });
     
     res.json({
       message: 'Orders retrieved successfully',
@@ -30,7 +30,7 @@ const getOrderById = async (req, res) => {
     const { id } = req.params;
     
     // Get order
-    const order = await Order.findOne({ _id: id, userId });
+    const order = await Order.findOne({ id, userId });
     if (!order) {
       return res.status(404).json({ 
         message: 'Order not found or does not belong to user' 
@@ -85,7 +85,7 @@ const createOrder = async (req, res) => {
       subtotal += itemTotal;
       
       orderItems.push({
-        productId: product._id,
+        productId: product.id,
         productName: product.name,
         productImage: product.image,
         quantity: item.quantity,
@@ -132,7 +132,7 @@ const processPayment = async (req, res) => {
     const { paymentMethod } = req.body;
     
     // Get order
-    const order = await Order.findOne({ _id: id, userId });
+    const order = await Order.findOne({ id, userId });
     if (!order) {
       return res.status(404).json({ 
         message: 'Order not found or does not belong to user' 
@@ -157,7 +157,7 @@ const processPayment = async (req, res) => {
     res.json({
       message: 'Payment parameters generated successfully',
       data: {
-        orderId: order._id,
+        orderId: order.id,
         orderNumber: order.orderNumber,
         totalAmount: order.totalAmount,
         paymentParams
@@ -221,7 +221,7 @@ const getTrackingInfo = async (req, res) => {
     const { id } = req.params;
     
     // Get order
-    const order = await Order.findOne({ _id: id, userId });
+    const order = await Order.findOne({ id, userId });
     if (!order) {
       return res.status(404).json({ 
         message: 'Order not found or does not belong to user' 
@@ -237,7 +237,7 @@ const getTrackingInfo = async (req, res) => {
     
     // Sample tracking information
     const trackingInfo = {
-      orderId: order._id,
+      orderId: order.id,
       trackingNumber: order.trackingNumber,
       carrier: 'SF Express',
       status: order.status === 'delivered' ? 'Delivered' : 'In Transit',
@@ -250,13 +250,13 @@ const getTrackingInfo = async (req, res) => {
           status: 'Order Placed'
         },
         {
-          timestamp: new Date(order.updatedAt.getTime() - 2 * 24 * 60 * 60 * 1000),
+          timestamp: new Date(new Date(order.updatedAt).getTime() - 2 * 24 * 60 * 60 * 1000),
           location: 'Shipping Facility',
           description: 'Order has been shipped',
           status: 'Shipped'
         },
         {
-          timestamp: new Date(order.updatedAt.getTime() - 1 * 24 * 60 * 60 * 1000),
+          timestamp: new Date(new Date(order.updatedAt).getTime() - 1 * 24 * 60 * 60 * 1000),
           location: 'Local Distribution Center',
           description: 'Order is out for delivery',
           status: 'Out for Delivery'

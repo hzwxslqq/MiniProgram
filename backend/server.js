@@ -6,15 +6,11 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
-// Import database connection
-const connectDB = require('./config/db');
+// Import database utilities
+const db = require('./utils/db');
 
-// Connect to database
-connectDB().then(async () => {
-  // Seed data after connection
-  const Product = require('./models/Product');
-  await Product.seedData();
-});
+// Initialize database
+db.initDB();
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -62,8 +58,12 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
+  
+  // Seed data
+  const Product = require('./models/Product');
+  await Product.seedData();
 });
 
 module.exports = app;

@@ -1,52 +1,82 @@
-const mongoose = require('mongoose');
+const db = require('../utils/db');
 
-const cartItemSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
-  },
-  productName: {
-    type: String,
-    required: true
-  },
-  productImage: {
-    type: String,
-    default: ''
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-    default: 1
-  },
-  selected: {
-    type: Boolean,
-    default: true
+// CartItem class
+class CartItem {
+  constructor(data) {
+    this.id = data.id;
+    this.userId = data.userId;
+    this.productId = data.productId;
+    this.productName = data.productName;
+    this.productImage = data.productImage;
+    this.price = data.price;
+    this.quantity = data.quantity;
+    this.selected = data.selected;
+    this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
   }
-}, {
-  timestamps: true
-});
-
-// Index for user
-cartItemSchema.index({ userId: 1 });
-
-// Index for product
-cartItemSchema.index({ productId: 1 });
-
-// Compound index for user and product
-cartItemSchema.index({ userId: 1, productId: 1 }, { unique: true });
-
-const CartItem = mongoose.model('CartItem', cartItemSchema);
+  
+  // Save cart item
+  async save() {
+    if (this.id) {
+      // Update existing cart item
+      const updatedItem = db.update('cartItems', this.id, {
+        userId: this.userId,
+        productId: this.productId,
+        productName: this.productName,
+        productImage: this.productImage,
+        price: this.price,
+        quantity: this.quantity,
+        selected: this.selected
+      });
+      Object.assign(this, updatedItem);
+    } else {
+      // Create new cart item
+      const newItem = db.create('cartItems', {
+        userId: this.userId,
+        productId: this.productId,
+        productName: this.productName,
+        productImage: this.productImage,
+        price: this.price,
+        quantity: this.quantity,
+        selected: this.selected
+      });
+      Object.assign(this, newItem);
+    }
+    return this;
+  }
+  
+  // Static methods
+  static async find(filter) {
+    const items = db.findByFilter('cartItems', filter);
+    return items.map(item => new CartItem(item));
+  }
+  
+  static async findOne(filter) {
+    const items = db.findByFilter('cartItems', filter);
+    if (items.length === 0) return null;
+    
+    const item = items[0];
+    return new CartItem(item);
+  }
+  
+  static async findOneAndDelete(filter) {
+    const items = db.findByFilter('cartItems', filter);
+    if (items.length === 0) return null;
+    
+    const item = items[0];
+    db.remove('cartItems', item.id);
+    return new CartItem(item);
+  }
+  
+  static async deleteMany(filter) {
+    return db.removeByFilter('cartItems', filter);
+  }
+  
+  static async populate(items, populateFields) {
+    // For simplicity, we'll just return the items as is
+    // In a real implementation, this would populate referenced documents
+    return items;
+  }
+}
 
 module.exports = CartItem;

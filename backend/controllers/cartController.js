@@ -7,7 +7,7 @@ const getCartItems = async (req, res) => {
     const userId = req.user.id;
     
     // Get cart items
-    const cartItems = await CartItem.find({ userId }).populate('productId', 'name image price');
+    const cartItems = await CartItem.find({ userId });
     
     res.json({
       message: 'Cart items retrieved successfully',
@@ -62,9 +62,6 @@ const addItemToCart = async (req, res) => {
       await cartItem.save();
     }
     
-    // Populate product details
-    await cartItem.populate('productId', 'name image price');
-    
     res.status(201).json({
       message: 'Item added to cart successfully',
       data: cartItem
@@ -92,7 +89,7 @@ const updateCartItem = async (req, res) => {
     }
     
     // Check if item exists and belongs to user
-    const cartItem = await CartItem.findOne({ _id: id, userId });
+    const cartItem = await CartItem.findOne({ id, userId });
     if (!cartItem) {
       return res.status(404).json({ 
         message: 'Cart item not found or does not belong to user' 
@@ -104,9 +101,6 @@ const updateCartItem = async (req, res) => {
     if (selected !== undefined) cartItem.selected = selected;
     
     await cartItem.save();
-    
-    // Populate product details
-    await cartItem.populate('productId', 'name image price');
     
     res.json({
       message: 'Cart item updated successfully',
@@ -127,7 +121,7 @@ const removeCartItem = async (req, res) => {
     const { id } = req.params;
     
     // Check if item exists and belongs to user
-    const cartItem = await CartItem.findOneAndDelete({ _id: id, userId });
+    const cartItem = await CartItem.findOneAndDelete({ id, userId });
     if (!cartItem) {
       return res.status(404).json({ 
         message: 'Cart item not found or does not belong to user' 

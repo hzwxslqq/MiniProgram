@@ -4,7 +4,7 @@ const User = require('../models/User');
 // Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, username: user.username },
+    { id: user.id, username: user.username },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -49,11 +49,6 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    if (error.code === 11000) {
-      return res.status(400).json({ 
-        message: 'Username already exists' 
-      });
-    }
     res.status(500).json({ 
       message: 'Internal server error' 
     });
