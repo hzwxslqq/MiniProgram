@@ -9,7 +9,7 @@ const getOrders = async (req, res) => {
     const userId = req.user.id;
     
     // Get orders
-    const orders = await Order.findByUserId(userId);
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
     
     res.json({
       message: 'Orders retrieved successfully',
@@ -30,17 +30,10 @@ const getOrderById = async (req, res) => {
     const { id } = req.params;
     
     // Get order
-    const order = await Order.findById(id);
+    const order = await Order.findOne({ _id: id, userId });
     if (!order) {
       return res.status(404).json({ 
-        message: 'Order not found' 
-      });
-    }
-    
-    // Check if order belongs to user
-    if (order.userId !== userId) {
-      return res.status(403).json({ 
-        message: 'Forbidden' 
+        message: 'Order not found or does not belong to user' 
       });
     }
     
@@ -92,7 +85,7 @@ const createOrder = async (req, res) => {
       subtotal += itemTotal;
       
       orderItems.push({
-        productId: product.id,
+        productId: product._id,
         productName: product.name,
         productImage: product.image,
         quantity: item.quantity,
@@ -105,7 +98,7 @@ const createOrder = async (req, res) => {
     const totalAmount = subtotal + shippingFee;
     
     // Create order
-    const order = await Order.create({
+    const order = new Order({
       userId,
       items: orderItems,
       subtotal,
@@ -114,12 +107,14 @@ const createOrder = async (req, res) => {
       shippingAddress
     });
     
-    // Clear cart items (in a real app, you might want to do this after payment)
-    // await CartItem.clearByUserId(userId);
+    await order.save();
+    
+    // Clear cart items after order creation
+    await CartItem.deleteMany({ userId });
     
     res.status(201).json({
       message: 'Order created successfully',
-      data: order.toObject()
+      data: order
     });
   } catch (error) {
     console.error('Create order error:', error);
@@ -137,17 +132,10 @@ const processPayment = async (req, res) => {
     const { paymentMethod } = req.body;
     
     // Get order
-    const order = await Order.findById(id);
+    const order = await Order.findOne({ _id: id, userId });
     if (!order) {
       return res.status(404).json({ 
-        message: 'Order not found' 
-      });
-    }
-    
-    // Check if order belongs to user
-    if (order.userId !== userId) {
-      return res.status(403).json({ 
-        message: 'Forbidden' 
+        message: 'Order not found or does not belong to user' 
       });
     }
     
@@ -169,7 +157,7 @@ const processPayment = async (req, res) => {
     res.json({
       message: 'Payment parameters generated successfully',
       data: {
-        orderId: order.id,
+        orderId: order._id,
         orderNumber: order.orderNumber,
         totalAmount: order.totalAmount,
         paymentParams
@@ -183,11 +171,11 @@ const processPayment = async (req, res) => {
   }
 };
 
-// Get tracking info
-const getTrackingInfo = async (req, res) => {
+// Update order status (for payment notification)
+const updateOrderStatus = async (req, res) => {
   try {
-    const userId = req.user.id;
     const { id } = req.params;
+    const { status, paymentId } = req.body;
     
     // Get order
     const order = await Order.findById(id);
@@ -197,10 +185,46 @@ const getTrackingInfo = async (req, res) => {
       });
     }
     
-    // Check if order belongs to user
-    if (order.userId !== userId) {
-      return res.status(403).json({ 
-        message: 'Forbidden' 
+    // Update order status
+    order.status = status;
+    if (paymentId) order.paymentId = paymentId;
+    
+    // If order is paid, set estimated delivery date
+    if (status === 'paid') {
+      order.estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+      order.trackingNumber = `TRK${Date.now()}`;
+    }
+    
+    // If order is shipped, update status
+    if (status === 'shipped') {
+      // In a real app, this would be triggered by logistics system
+    }
+    
+    await order.save();
+    
+    res.json({
+      message: `Order status updated to ${status}`,
+      data: order
+    });
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error' 
+    });
+  }
+};
+
+// Get tracking info
+const getTrackingInfo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    
+    // Get order
+    const order = await Order.findOne({ _id: id, userId });
+    if (!order) {
+      return res.status(404).json({ 
+        message: 'Order not found or does not belong to user' 
       });
     }
     
@@ -213,7 +237,7 @@ const getTrackingInfo = async (req, res) => {
     
     // Sample tracking information
     const trackingInfo = {
-      orderId: order.id,
+      orderId: order._id,
       trackingNumber: order.trackingNumber,
       carrier: 'SF Express',
       status: order.status === 'delivered' ? 'Delivered' : 'In Transit',
@@ -267,5 +291,6 @@ module.exports = {
   getOrderById,
   createOrder,
   processPayment,
+  updateOrderStatus,
   getTrackingInfo
 };

@@ -1,74 +1,61 @@
-const { ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-// User model
-class User {
-  constructor(data) {
-    this.id = data.id || new ObjectId().toString();
-    this.username = data.username;
-    this.password = data.password;
-    this.email = data.email || '';
-    this.phone = data.phone || '';
-    this.avatar = data.avatar || '';
-    this.createdAt = data.createdAt || new Date();
-    this.updatedAt = data.updatedAt || new Date();
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6
+  },
+  email: {
+    type: String,
+    trim: true
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  avatar: {
+    type: String,
+    default: ''
+  }
+}, {
+  timestamps: true
+});
+
+// Hash password before saving
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
   }
   
-  // Convert to plain object
-  toObject() {
-    return {
-      id: this.id,
-      username: this.username,
-      password: this.password,
-      email: this.email,
-      phone: this.phone,
-      avatar: this.avatar,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt
-    };
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
   }
-  
-  // Convert to JSON (exclude password)
-  toJSON() {
-    return {
-      id: this.id,
-      username: this.username,
-      email: this.email,
-      phone: this.phone,
-      avatar: this.avatar,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt
-    };
-  }
-}
+});
 
-// In-memory storage for demo purposes
-// In a real application, this would be a database
-const users = [
-  {
-    id: '1',
-    username: 'admin',
-    password: '$2a$10$8K1p/a0dhrxiowP.dnkgNORTWgdEDHn5L2/xjpEWuC.QQv4rKO9jO', // password: admin123
-    email: 'admin@example.com',
-    phone: '1234567890',
-    avatar: '',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
-
-// Model methods
-User.findById = async (id) => {
-  return users.find(user => user.id === id);
+// Compare password method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-User.findByUsername = async (username) => {
-  return users.find(user => user.username === username);
+// Remove password from JSON output
+userSchema.methods.toJSON = function() {
+  const userObject = this.toObject();
+  delete userObject.password;
+  return userObject;
 };
 
-User.create = async (userData) => {
-  const newUser = new User(userData);
-  users.push(newUser.toObject());
-  return newUser;
-};
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;

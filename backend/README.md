@@ -66,12 +66,17 @@ backend/
 
 2. Configure environment variables in `.env` file
 
-3. Start the development server:
+3. Initialize the database (optional):
+   ```bash
+   npm run init-db
+   ```
+
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-4. For production:
+5. For production:
    ```bash
    npm start
    ```

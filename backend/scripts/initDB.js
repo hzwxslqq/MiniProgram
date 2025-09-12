@@ -1,81 +1,37 @@
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    default: ''
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  originalPrice: {
-    type: Number,
-    default: function() { return this.price; },
-    min: 0
-  },
-  image: {
-    type: String,
-    default: ''
-  },
-  images: [{
-    type: String
-  }],
-  categoryId: {
-    type: String,
-    required: true
-  },
-  categoryName: {
-    type: String,
-    required: true
-  },
-  stock: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
-  },
-  reviewCount: {
-    type: Number,
-    default: 0
-  },
-  tags: [{
-    type: String
-  }],
-  isFeatured: {
-    type: Boolean,
-    default: false
-  }
-}, {
-  timestamps: true
+// Load environment variables
+dotenv.config();
+
+// Import models
+const User = require('../models/User');
+const Product = require('../models/Product');
+
+// Connect to database
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-// Index for search
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
-
-// Index for category
-productSchema.index({ categoryId: 1 });
-
-// Index for featured products
-productSchema.index({ isFeatured: 1 });
-
-const Product = mongoose.model('Product', productSchema);
-
-// Seed data function
-Product.seedData = async () => {
-  const count = await Product.countDocuments();
-  if (count === 0) {
+const initDB = async () => {
+  try {
+    // Clear existing data
+    await User.deleteMany({});
+    await Product.deleteMany({});
+    
+    // Create admin user
+    const adminUser = new User({
+      username: 'admin',
+      password: 'admin123',
+      email: 'admin@example.com',
+      phone: '1234567890'
+    });
+    
+    await adminUser.save();
+    console.log('Admin user created');
+    
+    // Create sample products
     const products = [
       {
         name: 'Wireless Headphones',
@@ -170,20 +126,14 @@ Product.seedData = async () => {
     ];
     
     await Product.insertMany(products);
-    console.log('Product seed data inserted');
+    console.log('Sample products created');
+    
+    console.log('Database initialized successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    process.exit(1);
   }
 };
 
-Product.getCategories = async () => {
-  const categories = [
-    { id: '1', name: 'Electronics', icon: '/images/icon_electronics.png' },
-    { id: '2', name: 'Clothing', icon: '/images/icon_clothing.png' },
-    { id: '3', name: 'Home', icon: '/images/icon_home_category.png' },
-    { id: '4', name: 'Beauty', icon: '/images/icon_beauty.png' },
-    { id: '5', name: 'Sports', icon: '/images/icon_sports.png' }
-  ];
-  
-  return categories;
-};
-
-module.exports = Product;
+initDB();

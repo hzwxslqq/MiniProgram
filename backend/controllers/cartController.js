@@ -7,7 +7,7 @@ const getCartItems = async (req, res) => {
     const userId = req.user.id;
     
     // Get cart items
-    const cartItems = await CartItem.findByUserId(userId);
+    const cartItems = await CartItem.find({ userId }).populate('productId', 'name image price');
     
     res.json({
       message: 'Cart items retrieved successfully',
@@ -43,18 +43,15 @@ const addItemToCart = async (req, res) => {
     }
     
     // Check if item already in cart
-    let cartItem = await CartItem.findByUserIdAndProductId(userId, productId);
+    let cartItem = await CartItem.findOne({ userId, productId });
     
     if (cartItem) {
       // Update quantity
-      const newQuantity = cartItem.quantity + quantity;
-      cartItem = await CartItem.update(cartItem.id, { 
-        quantity: newQuantity,
-        updatedAt: new Date()
-      });
+      cartItem.quantity += quantity;
+      await cartItem.save();
     } else {
       // Add new item
-      cartItem = await CartItem.create({
+      cartItem = new CartItem({
         userId,
         productId,
         productName: product.name,
@@ -62,11 +59,15 @@ const addItemToCart = async (req, res) => {
         price: product.price,
         quantity
       });
+      await cartItem.save();
     }
+    
+    // Populate product details
+    await cartItem.populate('productId', 'name image price');
     
     res.status(201).json({
       message: 'Item added to cart successfully',
-      data: cartItem.toObject()
+      data: cartItem
     });
   } catch (error) {
     console.error('Add to cart error:', error);
@@ -91,29 +92,25 @@ const updateCartItem = async (req, res) => {
     }
     
     // Check if item exists and belongs to user
-    const cartItem = await CartItem.findById(id);
+    const cartItem = await CartItem.findOne({ _id: id, userId });
     if (!cartItem) {
       return res.status(404).json({ 
-        message: 'Cart item not found' 
-      });
-    }
-    
-    if (cartItem.userId !== userId) {
-      return res.status(403).json({ 
-        message: 'Forbidden' 
+        message: 'Cart item not found or does not belong to user' 
       });
     }
     
     // Update item
-    const updateData = {};
-    if (quantity !== undefined) updateData.quantity = quantity;
-    if (selected !== undefined) updateData.selected = selected;
+    if (quantity !== undefined) cartItem.quantity = quantity;
+    if (selected !== undefined) cartItem.selected = selected;
     
-    const updatedItem = await CartItem.update(id, updateData);
+    await cartItem.save();
+    
+    // Populate product details
+    await cartItem.populate('productId', 'name image price');
     
     res.json({
       message: 'Cart item updated successfully',
-      data: updatedItem.toObject()
+      data: cartItem
     });
   } catch (error) {
     console.error('Update cart item error:', error);
@@ -130,24 +127,10 @@ const removeCartItem = async (req, res) => {
     const { id } = req.params;
     
     // Check if item exists and belongs to user
-    const cartItem = await CartItem.findById(id);
+    const cartItem = await CartItem.findOneAndDelete({ _id: id, userId });
     if (!cartItem) {
       return res.status(404).json({ 
-        message: 'Cart item not found' 
-      });
-    }
-    
-    if (cartItem.userId !== userId) {
-      return res.status(403).json({ 
-        message: 'Forbidden' 
-      });
-    }
-    
-    // Remove item
-    const result = await CartItem.delete(id);
-    if (!result) {
-      return res.status(500).json({ 
-        message: 'Failed to remove item' 
+        message: 'Cart item not found or does not belong to user' 
       });
     }
     

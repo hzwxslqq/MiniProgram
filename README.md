@@ -84,8 +84,13 @@ project/
 1. Navigate to the backend directory: `cd backend`
 2. Install dependencies: `npm install`
 3. Configure environment variables in `.env`
-4. Start the development server: `npm run dev`
-5. The API will be available at `http://localhost:3000`
+4. (Optional) Initialize database with sample data: `npm run init-db`
+5. Start the development server: `npm run dev`
+6. The API will be available at `http://localhost:3000`
+
+### Database
+
+The backend uses MongoDB for data storage. Make sure you have MongoDB installed and running, or configure the `MONGODB_URI` in the `.env` file to point to your MongoDB instance.
 
 ## API Integration
 

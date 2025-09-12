@@ -6,6 +6,16 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
+// Import database connection
+const connectDB = require('./config/db');
+
+// Connect to database
+connectDB().then(async () => {
+  // Seed data after connection
+  const Product = require('./models/Product');
+  await Product.seedData();
+});
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');

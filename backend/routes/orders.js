@@ -4,6 +4,7 @@ const {
   getOrderById, 
   createOrder, 
   processPayment,
+  updateOrderStatus,
   getTrackingInfo
 } = require('../controllers/orderController');
 const { authenticate } = require('../middleware/auth');
@@ -24,6 +25,9 @@ router.post('/', createOrder);
 
 // Process payment
 router.post('/:id/payment', processPayment);
+
+// Update order status (for payment notification)
+router.put('/:id/status', updateOrderStatus);
 
 // Get tracking info
 router.get('/:id/tracking', getTrackingInfo);

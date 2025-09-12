@@ -1,11 +1,10 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 // Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user.id, username: user.username },
+    { id: user._id, username: user.username },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -24,26 +23,24 @@ const register = async (req, res) => {
     }
     
     // Check if user already exists
-    const existingUser = await User.findByUsername(username);
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({ 
         message: 'Username already exists' 
       });
     }
     
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
     // Create user
-    const newUser = await User.create({
+    const newUser = new User({
       username,
-      password: hashedPassword,
+      password,
       email
     });
     
+    await newUser.save();
+    
     // Generate token
-    const token = generateToken(newUser.toObject());
+    const token = generateToken(newUser);
     
     res.status(201).json({
       message: 'User registered successfully',
@@ -52,6 +49,11 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: 'Username already exists' 
+      });
+    }
     res.status(500).json({ 
       message: 'Internal server error' 
     });
@@ -71,7 +73,7 @@ const login = async (req, res) => {
     }
     
     // Find user
-    const user = await User.findByUsername(username);
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({ 
         message: 'Invalid credentials' 
@@ -79,7 +81,7 @@ const login = async (req, res) => {
     }
     
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ 
         message: 'Invalid credentials' 
@@ -92,13 +94,7 @@ const login = async (req, res) => {
     res.json({
       message: 'Login successful',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar
-      }
+      user: user.toJSON()
     });
   } catch (error) {
     console.error('Login error:', error);
