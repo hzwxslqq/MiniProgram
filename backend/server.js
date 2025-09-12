@@ -6,11 +6,31 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
-// Import database utilities
-const db = require('./utils/db');
+// Import database configuration
+const { DB_TYPE } = require('./config/dbConfig');
+
+// Import database utilities based on configuration
+let db, User, Product, CartItem, Order;
+if (DB_TYPE === 'mysql') {
+  db = require('./utils/mysql');
+  User = require('./models/mysql/User');
+  Product = require('./models/mysql/Product');
+  CartItem = require('./models/mysql/CartItem');
+  Order = require('./models/mysql/Order');
+} else {
+  db = require('./utils/db');
+  User = require('./models/User');
+  Product = require('./models/Product');
+  CartItem = require('./models/CartItem');
+  Order = require('./models/Order');
+}
 
 // Initialize database
-db.initDB();
+if (DB_TYPE === 'mysql') {
+  db.initDB();
+} else {
+  db.initDB();
+}
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -36,7 +56,7 @@ app.use('/api/orders', orderRoutes);
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'Online Store API', 
+    message: `Online Store API (${DB_TYPE} version)`, 
     version: '1.0.0' 
   });
 });
@@ -59,11 +79,14 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT} using ${DB_TYPE} database`);
   
   // Seed data
-  const Product = require('./models/Product');
-  await Product.seedData();
+  if (DB_TYPE === 'mysql') {
+    await Product.seedData();
+  } else {
+    await Product.seedData();
+  }
 });
 
 module.exports = app;

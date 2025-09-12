@@ -60,7 +60,7 @@
     <view class="cart-footer">
       <view class="select-all">
         <icon 
-          type="{{cartItems.length > 0 && cartItems.every(item => item.selected) ? 'success' : 'circle'}}" 
+          type="{{selectAllIcon}}" 
           size="24" 
           bindtap="selectAll"
         />

@@ -4,6 +4,7 @@ Page({
     cartItems: [],
     selectedItems: [],
     totalPrice: 0,
+    selectAllIcon: 'circle',
     isEditing: false,
     loading: false
   },
@@ -30,11 +31,14 @@ Page({
       
       const selectedItems = cartItems.filter(item => item.selected);
       const totalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const allSelected = cartItems.length > 0 && cartItems.every(item => item.selected);
+      const selectAllIcon = allSelected ? 'success' : 'circle';
       
       this.setData({
         cartItems: cartItems,
         selectedItems: selectedItems,
         totalPrice: totalPrice.toFixed(2),
+        selectAllIcon: selectAllIcon,
         loading: false
       });
     }, 500);
@@ -52,17 +56,20 @@ Page({
     
     const selectedItems = cartItems.filter(item => item.selected);
     const totalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const allSelected = cartItems.length > 0 && cartItems.every(item => item.selected);
+    const selectAllIcon = allSelected ? 'success' : 'circle';
     
     this.setData({
       cartItems: cartItems,
       selectedItems: selectedItems,
-      totalPrice: totalPrice.toFixed(2)
+      totalPrice: totalPrice.toFixed(2),
+      selectAllIcon: selectAllIcon
     });
   },
 
   // Select all items
   selectAll: function() {
-    const allSelected = this.data.cartItems.every(item => item.selected);
+    const allSelected = this.data.cartItems.length > 0 && this.data.cartItems.every(item => item.selected);
     const cartItems = this.data.cartItems.map(item => ({
       ...item,
       selected: !allSelected
@@ -70,11 +77,13 @@ Page({
     
     const selectedItems = cartItems.filter(item => item.selected);
     const totalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const selectAllIcon = !allSelected ? 'success' : 'circle';
     
     this.setData({
       cartItems: cartItems,
       selectedItems: selectedItems,
-      totalPrice: totalPrice.toFixed(2)
+      totalPrice: totalPrice.toFixed(2),
+      selectAllIcon: selectAllIcon
     });
   },
 
@@ -130,11 +139,14 @@ Page({
           const cartItems = this.data.cartItems.filter(item => item.id !== itemId);
           const selectedItems = cartItems.filter(item => item.selected);
           const totalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          const allSelected = cartItems.length > 0 && cartItems.every(item => item.selected);
+          const selectAllIcon = allSelected ? 'success' : 'circle';
           
           this.setData({
             cartItems: cartItems,
             selectedItems: selectedItems,
-            totalPrice: totalPrice.toFixed(2)
+            totalPrice: totalPrice.toFixed(2),
+            selectAllIcon: selectAllIcon
           });
           
           wx.showToast({
