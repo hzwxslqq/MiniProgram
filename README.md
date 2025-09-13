@@ -40,8 +40,19 @@ project/
 │       ├── orders.wxml    # Order page structure
 │       ├── orders.wxss    # Order page styles
 │       └── orders.json    # Order page configuration
-└── utils/                 # Utility functions
-    └── api.js             # API request utilities
+├── utils/                 # Utility functions
+│   └── api.js             # API request utilities
+└── backend/               # Backend API
+    ├── controllers/       # Request handlers
+    ├── middleware/        # Custom middleware
+    ├── models/            # Data models
+    ├── routes/            # API routes
+    ├── utils/             # Utility functions
+    ├── config/            # Configuration files
+    ├── scripts/           # Utility scripts
+    ├── server.js          # Main server file
+    ├── package.json       # Project dependencies
+    └── .env               # Environment variables
 ```
 
 ## Pages
@@ -84,13 +95,25 @@ project/
 1. Navigate to the backend directory: `cd backend`
 2. Install dependencies: `npm install`
 3. Configure environment variables in `.env`
-4. (Optional) Initialize database with sample data: `npm run init-db`
-5. Start the development server: `npm run dev`
-6. The API will be available at `http://localhost:3000`
+4. Choose your database implementation (see Database section below)
+5. Initialize database with sample data: `npm run init-db` or `npm run init-mysql-db`
+6. Start the development server: `npm run dev` or `npm start`
+7. The API will be available at `http://localhost:3000`
 
 ### Database
 
-The backend uses MongoDB for data storage. Make sure you have MongoDB installed and running, or configure the `MONGODB_URI` in the `.env` file to point to your MongoDB instance.
+The backend supports multiple database implementations:
+
+1. **File-based database** (default) - For development and testing
+2. **MySQL database** - For production use (free and open-source)
+3. **WeChat Cloud Development** - For WeChat Mini-Program integration
+
+To switch between database implementations, update the `DB_TYPE` environment variable in the `.env` file:
+- `DB_TYPE=file` for file-based database (default)
+- `DB_TYPE=mysql` for MySQL database
+- `DB_TYPE=wechat` for WeChat Cloud Development (when implemented)
+
+For detailed instructions on using MySQL or implementing WeChat Cloud Development, see [backend/README_MYSQL_WECHAT.md](file:///c%3A/02WorkSpace/SourceCode/MimiProgram/backend/README_MYSQL_WECHAT.md).
 
 ## API Integration
 
@@ -102,3 +125,8 @@ The application is designed to work with a backend API. The [utils/api.js](file:
 - JavaScript
 - WXML (WeiXin Markup Language)
 - WXSS (WeiXin Style Sheets)
+- Node.js
+- Express.js
+- MySQL (or file-based database as fallback)
+- JSON Web Tokens (JWT) for authentication
+- bcrypt.js for password hashing

@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start-mysql": "node start-mysql.js",
     "dev": "nodemon server.js",
     "init-db": "node scripts/initDB.js",
     "init-mysql-db": "node scripts/initMySQLDB.js"

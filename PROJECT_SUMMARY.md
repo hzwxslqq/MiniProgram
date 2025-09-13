@@ -25,6 +25,10 @@ This project is a complete implementation of an online store as a WeChat Mini-Pr
 - Authentication with JWT tokens
 - Payment integration (WeChat Pay)
 - Logistics tracking information
+- **Multiple database implementations**:
+  - File-based database (default for development)
+  - MySQL database (production-ready, free alternative)
+  - WeChat Cloud Development (serverless integration)
 
 ## Key Features
 
@@ -43,7 +47,11 @@ This project is a complete implementation of an online store as a WeChat Mini-Pr
 - Order processing with status tracking
 - Payment processing (WeChat Pay integration)
 - Logistics tracking information
-- Database integration (both MongoDB and file-based fallback)
+- **Multiple database support**:
+  - File-based database for development/testing
+  - MySQL database for production (free and open-source)
+  - WeChat Cloud Development for serverless deployment
+- Easy switching between database implementations
 
 ## Project Structure
 
@@ -101,10 +109,12 @@ project/
 ### Backend
 - Node.js
 - Express.js
-- MongoDB (with Mongoose ODM)
+- Multiple database options:
+  - File-based database (JSON files)
+  - MySQL (with mysql2 package)
+  - WeChat Cloud Database (when implemented)
 - JSON Web Tokens (JWT) for authentication
 - bcrypt.js for password hashing
-- File-based database as fallback
 
 ## API Endpoints
 
@@ -143,21 +153,49 @@ project/
 1. Navigate to the backend directory: `cd backend`
 2. Install dependencies: `npm install`
 3. Configure environment variables in `.env`
-4. (Optional) Initialize database with sample data: `npm run init-db`
-5. Start the development server: `npm run dev`
-6. The API will be available at `http://localhost:3000`
+4. Choose your database implementation:
+   - File-based (default): No additional setup required
+   - MySQL: Install MySQL and configure connection details
+   - WeChat Cloud: Follow the guide in `README_MYSQL_WECHAT.md`
+5. (Optional) Initialize database with sample data:
+   - File-based: `npm run init-db`
+   - MySQL: `npm run init-mysql-db`
+6. Start the development server:
+   - File-based: `npm start`
+   - MySQL: `npm run start-mysql`
+7. The API will be available at `http://localhost:3000`
 
-### Database
-The backend supports two database options:
-1. MongoDB - For production use
-2. File-based database - For development/testing
+### Database Options
+
+The backend supports three database implementations:
+
+1. **File-based database** (default):
+   - No external dependencies
+   - Ideal for development and testing
+   - Data stored in JSON files
+
+2. **MySQL database**:
+   - Production-ready solution
+   - Completely free and open-source
+   - Better performance for larger datasets
+   - Requires MySQL server installation
+
+3. **WeChat Cloud Development**:
+   - Serverless solution
+   - Integrated with WeChat ecosystem
+   - Detailed implementation guide provided
+
+To switch between implementations, update the `DB_TYPE` environment variable in `.env`:
+- `DB_TYPE=file` for file-based database
+- `DB_TYPE=mysql` for MySQL database
+- `DB_TYPE=wechat` for WeChat Cloud Development
 
 ## Preview Status
 
 ### Current Status
 - Frontend UI is complete and ready for preview
-- Backend API is implemented but requires environment setup
-- Database integration is complete (both MongoDB and file-based)
+- Backend API is implemented with multiple database options
+- Database integration is complete for all implementations
 
 ### Preview Instructions
 1. Open WeChat Developer Tool manually
@@ -173,6 +211,9 @@ The backend supports two database options:
 5. Add product reviews and ratings
 6. Enhance payment security features
 7. Add push notifications for order updates
+8. Implement Redis caching for better performance
+9. Add database migration scripts
+10. Implement database backup and restore functionality
 
 ## Conclusion
-This project provides a complete foundation for an online store as a WeChat Mini-Program. The frontend is fully implemented with a clean, user-friendly interface, and the backend provides all necessary APIs for a complete e-commerce experience. With proper environment setup, this application is ready for deployment.
+This project provides a complete foundation for an online store as a WeChat Mini-Program. The frontend is fully implemented with a clean, user-friendly interface, and the backend provides all necessary APIs for a complete e-commerce experience with multiple database options. With proper environment setup, this application is ready for deployment.
