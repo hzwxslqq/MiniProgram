@@ -1,0 +1,74 @@
+<view class="container">
+  <view class="payment-success-header">
+    <view class="success-icon">✓</view>
+    <text class="header-title">Payment Successful!</text>
+    <text class="success-message">Thank you for your purchase</text>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <loading />
+    <text>Loading order details...</text>
+  </view>
+
+  <!-- Order details -->
+  <view wx:elif="{{order}}" class="order-details">
+    <view class="section">
+      <view class="section-title">
+        <text>Order Summary</text>
+      </view>
+      
+      <view class="order-info">
+        <view class="info-row">
+          <text>Order Number:</text>
+          <text class="info-value">{{order.orderNumber}}</text>
+        </view>
+        <view class="info-row">
+          <text>Status:</text>
+          <text class="info-value status-{{order.status}}">{{order.status}}</text>
+        </view>
+        <view class="info-row">
+          <text>Date:</text>
+          <text class="info-value">{{order.createdAt}}</text>
+        </view>
+        <view class="info-row">
+          <text>Total Amount:</text>
+          <text class="info-value total-amount">${{order.totalAmount}}</text>
+        </view>
+      </view>
+      
+      <view class="order-items">
+        <view class="section-title">
+          <text>Items Purchased</text>
+        </view>
+        <view wx:for="{{order.items}}" wx:key="productId" class="item">
+          <image class="item-image" src="{{item.productImage}}" mode="aspectFill" />
+          <view class="item-details">
+            <text class="item-name">{{item.productName}}</text>
+            <text class="item-quantity">Quantity: {{item.quantity}}</text>
+            <text class="item-price">${{item.price * item.quantity}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Actions -->
+  <view class="footer">
+    <button 
+      class="action-btn view-details-btn" 
+      bindtap="onViewOrderDetails">
+      View Order Details
+    </button>
+    <button 
+      class="action-btn orders-btn" 
+      bindtap="onViewOrders">
+      View All Orders
+    </button>
+    <button 
+      class="action-btn home-btn" 
+      bindtap="onReturnHome">
+      Return to Home
+    </button>
+  </view>
+</view>

@@ -1,0 +1,108 @@
+<view class="container">
+  <view class="payment-header">
+    <text class="header-title">Payment</text>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <loading />
+    <text>Loading order details...</text>
+  </view>
+
+  <!-- Order details -->
+  <view wx:else class="order-details">
+    <view class="section">
+      <view class="section-title">
+        <text>Order Summary</text>
+      </view>
+      
+      <view wx:if="{{order}}" class="order-summary">
+        <view class="order-number">
+          <text>Order #{{order.orderNumber}}</text>
+        </view>
+        
+        <view class="order-items">
+          <view wx:for="{{order.items}}" wx:key="productId" class="item">
+            <view class="item-info">
+              <text class="item-name">{{item.productName}}</text>
+              <text class="item-quantity">Quantity: {{item.quantity}}</text>
+            </view>
+            <view class="item-price">
+              <text>${{item.price * item.quantity}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="order-totals">
+          <view class="total-row">
+            <text>Subtotal:</text>
+            <text>${{order.subtotal}}</text>
+          </view>
+          <view class="total-row">
+            <text>Shipping:</text>
+            <text>${{order.shippingFee}}</text>
+          </view>
+          <view class="total-row grand-total">
+            <text>Total:</text>
+            <text class="total-amount">${{order.totalAmount}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:elif="{{!loading}}" class="no-order">
+        <text>Order details not available</text>
+      </view>
+      
+      <view wx:else class="no-order">
+        <text>Order details not available</text>
+      </view>
+    </view>
+
+    <!-- Payment Method -->
+    <view class="section">
+      <view class="section-title">
+        <text>Payment Method</text>
+      </view>
+      <view class="payment-method">
+        <image class="payment-icon" src="/images/wechat_icon.png"></image>
+        <text>WeChat Pay</text>
+      </view>
+    </view>
+
+    <!-- Terms and Conditions -->
+    <view class="section terms-section">
+      <label bindtap="onLabelTap">
+        <checkbox 
+          id="terms-checkbox"
+          value="true"
+          checked="{{termsAccepted}}" 
+          bindchange="onTermsChange" />
+        <text>I agree to the Terms and Conditions (Accepted: {{termsAccepted}})</text>
+      </label>
+    </view>
+
+    <!-- Test Button for Debugging -->
+    <view class="section">
+      <button bindtap="testCheckboxTrigger">Test Checkbox Trigger</button>
+      <button bindtap="checkState">Check Current State</button>
+    </view>
+
+    <!-- Payment Actions -->
+    <view class="footer">
+      <button 
+        class="pay-btn button-primary" 
+        bindtap="onPayNow"
+        disabled="{{paymentProcessing || !termsAccepted}}">
+        <text wx:if="{{!paymentProcessing}}">Pay Now - ${{order.totalAmount}}</text>
+        <text wx:else>Processing...</text>
+      </button>
+      
+      <button 
+        class="cancel-btn button-secondary" 
+        bindtap="onCancel"
+        disabled="{{paymentProcessing}}"
+      >
+        Cancel
+      </button>
+    </view>
+  </view>
+</view>

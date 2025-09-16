@@ -40,6 +40,28 @@
       </button>
     </form>
 
+    <view class="divider">
+      <text class="divider-text">or</text>
+    </view>
+
+    <!-- WeChat Mobile Login Button -->
+    <button 
+      class="wechat-login-button" 
+      open-type="getPhoneNumber"
+      bindgetphonenumber="onWeChatMobileLogin"
+      hover-class="button-hover"
+      loading="{{wechatLoading}}"
+      disabled="{{wechatLoading}}"
+    >
+      <image class="wechat-icon" src="/images/wechat_icon.png" mode="aspectFit" />
+      <text class="wechat-login-text">Login with WeChat Mobile</text>
+    </button>
+    
+    <!-- Instructional text for WeChat login -->
+    <view class="instruction-text">
+      <text>Tapping above will prompt for phone number access</text>
+    </view>
+
     <view class="register-link">
       <text>Don't have an account? </text>
       <text class="register-text" bindtap="onRegister">Register</text>

@@ -123,6 +123,10 @@ const processPayment = async (req, res) => {
     order.payment_method = paymentMethod;
     order.payment_id = `PAY-${Date.now()}`; // Generate payment ID
     
+    // Assign tracking number when order is paid
+    order.tracking_number = `YD${Date.now()}`; // YD prefix for Yunda Express
+    order.estimated_delivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+    
     await order.save();
     
     res.json({
@@ -154,6 +158,17 @@ const updateOrderStatus = async (req, res) => {
     
     // Update order status
     order.status = status;
+    
+    // If order is shipped, ensure tracking number follows Yunda format
+    if (status === 'shipped' && order.tracking_number) {
+      // Ensure tracking number follows Yunda format (12-15 digits)
+      // If it doesn't already follow Yunda format, we could generate a new one
+      // For now, we'll just make sure it exists
+      if (!order.tracking_number.startsWith('YD')) {
+        order.tracking_number = `YD${Date.now()}`;
+      }
+    }
+    
     await order.save();
     
     res.json({
@@ -168,6 +183,9 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// Import logistics module
+const { getTrackingInfo: getLogisticsTrackingInfo } = require('../../utils/logistics');
+
 // Get logistics tracking info
 const getTrackingInfo = async (req, res) => {
   try {
@@ -181,23 +199,34 @@ const getTrackingInfo = async (req, res) => {
       });
     }
     
-    // In a real implementation, this would fetch tracking info from a logistics API
+    // Check if order has tracking number and is shipped
+    if (!order.tracking_number) {
+      return res.status(400).json({ 
+        message: 'Order does not have a tracking number yet' 
+      });
+    }
+    
+    if (order.status !== 'shipped' && order.status !== 'delivered') {
+      return res.status(400).json({ 
+        message: 'Order is not shipped yet' 
+      });
+    }
+    
+    // Fetch tracking info from logistics API
+    const logisticsTrackingInfo = await getLogisticsTrackingInfo(order.tracking_number);
+    
     const trackingInfo = {
-      trackingNumber: order.tracking_number || 'TRK' + Date.now(),
-      status: order.status,
-      estimatedDelivery: order.estimated_delivery || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      events: [
-        {
-          status: 'Order Placed',
-          timestamp: order.created_at,
-          location: 'Order Processing Center'
-        },
-        {
-          status: 'Shipped',
-          timestamp: order.updated_at,
-          location: 'Distribution Center'
-        }
-      ]
+      orderId: order.id,
+      trackingNumber: logisticsTrackingInfo.trackingNumber,
+      carrier: logisticsTrackingInfo.carrier || 'Yunda Express',
+      status: logisticsTrackingInfo.status,
+      estimatedDelivery: logisticsTrackingInfo.estimatedDelivery,
+      events: logisticsTrackingInfo.events.map(event => ({
+        status: event.status,
+        timestamp: event.timestamp,
+        location: event.location,
+        description: event.description || ''
+      }))
     };
     
     res.json({
@@ -207,7 +236,7 @@ const getTrackingInfo = async (req, res) => {
   } catch (error) {
     console.error('Get tracking info error:', error);
     res.status(500).json({ 
-      message: 'Internal server error' 
+      message: error.message || 'Internal server error' 
     });
   }
 };

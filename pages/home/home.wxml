@@ -11,51 +11,24 @@
     />
     <button class="search-button" bindtap="onSearch">Search</button>
   </view>
-
-  <!-- Banner Slider -->
-  <swiper 
-    class="banner-swiper" 
-    indicator-dots="{{true}}" 
-    autoplay="{{true}}" 
-    interval="5000" 
-    duration="1000"
-  >
-    <block wx:for="{{banners}}" wx:key="id">
-      <swiper-item>
-        <image class="banner-image" src="{{item.image}}" mode="aspectFill" />
-      </swiper-item>
-    </block>
-  </swiper>
-
-  <!-- Categories -->
-  <view class="section-title">
-    <text>Categories</text>
-  </view>
-  <scroll-view class="categories-container" scroll-x="true">
-    <view 
-      class="category-item" 
-      wx:for="{{categories}}" 
-      wx:key="id" 
-      bindtap="onCategorySelect" 
-      data-category="{{item}}"
-    >
-      <image class="category-icon" src="{{item.icon}}" />
-      <text class="category-name">{{item.name}}</text>
-    </view>
-  </scroll-view>
-
   <!-- Featured Products -->
   <view class="section-title">
     <text>Featured Products</text>
   </view>
-  <view class="products-container">
+  <view class="products-grid">
     <view 
       class="product-card" 
       wx:for="{{featuredProducts}}" 
       wx:key="id"
     >
       <view bindtap="onViewProduct" data-product="{{item}}">
-        <image class="product-image" src="{{item.image}}" mode="aspectFill" />
+        <image 
+          class="product-image" 
+          src="{{item.image}}" 
+          mode="aspectFill"
+          binderror="onImageError"
+          data-product-id="{{item.id}}"
+        />
         <view class="product-info">
           <text class="product-name">{{item.name}}</text>
           <view class="product-price-container">

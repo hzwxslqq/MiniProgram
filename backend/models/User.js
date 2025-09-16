@@ -10,12 +10,17 @@ class User {
     this.email = data.email;
     this.phone = data.phone;
     this.avatar = data.avatar;
+    this.wechatOpenId = data.wechatOpenId; // Add WeChat openid field
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
   
   // Compare password method
   async comparePassword(candidatePassword) {
+    // For WeChat mobile users, password is a placeholder and not used
+    if (this.password === 'wechat_mobile_user') {
+      return false; // WeChat users should use WeChat login, not password login
+    }
     return bcrypt.compare(candidatePassword, this.password);
   }
   
@@ -28,6 +33,15 @@ class User {
   
   // Save user
   async save() {
+    // Validate required fields
+    if (!this.username) {
+      throw new Error('Username is required');
+    }
+    
+    if (!this.password && !this.wechatOpenId) {
+      throw new Error('Either password or WeChat openid is required');
+    }
+    
     if (this.id) {
       // Update existing user
       const updatedUser = db.update('users', this.id, {
@@ -35,21 +49,34 @@ class User {
         password: this.password,
         email: this.email,
         phone: this.phone,
-        avatar: this.avatar
+        avatar: this.avatar,
+        wechatOpenId: this.wechatOpenId
       });
       Object.assign(this, updatedUser);
     } else {
       // Create new user
-      // Hash password before saving
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
+      // Hash password before saving (only if it's not a placeholder for WeChat login)
+      if (this.password && this.password !== 'wechat_mobile_user') {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+      }
+      
+      // Ensure unique username
+      let uniqueUsername = this.username;
+      let counter = 1;
+      while (await User.findOne({ username: uniqueUsername })) {
+        uniqueUsername = `${this.username}_${counter}`;
+        counter++;
+      }
+      this.username = uniqueUsername;
       
       const newUser = db.create('users', {
         username: this.username,
         password: this.password,
         email: this.email,
         phone: this.phone,
-        avatar: this.avatar
+        avatar: this.avatar,
+        wechatOpenId: this.wechatOpenId
       });
       Object.assign(this, newUser);
     }

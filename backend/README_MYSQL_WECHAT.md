@@ -281,6 +281,43 @@ All endpoints are the same regardless of database implementation:
 - `PUT /api/orders/:id/status` - Update order status
 - `GET /api/orders/:id/tracking` - Get logistics tracking info
 
+## WeChat Pay Integration
+
+The application includes WeChat Pay integration for processing payments. By default, the payment processing is in simulation mode for development purposes.
+
+### Enabling Real WeChat Pay Integration
+
+1. Update the `.env` file with your real WeChat Pay credentials:
+   ```env
+   WECHAT_APP_ID=your-real-wechat-app-id
+   WECHAT_APP_SECRET=your-real-wechat-app-secret
+   WECHAT_PAY_MCH_ID=your-real-merchant-id
+   WECHAT_PAY_API_KEY=your-real-api-key
+   ```
+
+2. Uncomment and implement the real WeChat Pay API integration in `backend/controllers/orderController.js` in the `sendWeChatPayRequest` function.
+
+3. Install required dependencies:
+   ```bash
+   npm install xmlbuilder xml2js
+   ```
+
+### Payment Flow
+
+1. User accepts terms and clicks "Pay Now"
+2. Frontend sends payment request to backend
+3. Backend validates order and generates payment parameters
+4. Backend sends request to WeChat Pay API (or simulates in development)
+5. If successful, order status is updated to "paid"
+6. User is redirected to orders page
+
+### Security Considerations
+
+- Never store sensitive credentials in client-side code
+- Use environment variables for credentials
+- Implement proper signature verification for WeChat Pay responses
+- Use HTTPS for all payment-related communications
+
 ## Environment Variables
 
 ```env
@@ -307,6 +344,23 @@ MYSQL_DATABASE=online_store
 3. **Relational Data**: Our e-commerce data has clear relationships that work well with relational databases
 4. **Maturity**: MySQL has been around longer and has more extensive documentation and community support
 5. **WeChat Integration**: MySQL integrates well with most cloud hosting providers that support WeChat Mini-Programs
+
+## Testing Payment Flow
+
+### In Development Mode (Simulation)
+
+1. The payment button will show "Processing..." when clicked
+2. The backend will simulate a successful payment response
+3. The order status will be updated to "paid"
+4. User will be redirected to the orders page
+5. A modal will appear indicating this is simulation mode
+
+### Testing Real Payment Integration
+
+1. Update `.env` with real WeChat Pay credentials
+2. Uncomment the real API implementation
+3. Test with WeChat's sandbox environment before going to production
+4. Use WeChat DevTools to test the payment flow
 
 ## Future Enhancements
 

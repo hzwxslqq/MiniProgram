@@ -1,0 +1,108 @@
+<view class="container">
+  <view class="checkout-header">
+    <text class="header-title">Checkout</text>
+  </view>
+
+  <!-- Order Summary -->
+  <view class="section">
+    <view class="section-title">
+      <text>Order Summary</text>
+    </view>
+    <view class="order-summary">
+      <view class="summary-total">
+        <text>Total: ${{totalPrice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Shipping Address -->
+  <view class="section">
+    <view class="section-title">
+      <text>Shipping Address</text>
+    </view>
+    <view class="form-group">
+      <input 
+        class="form-input" 
+        placeholder="Full Name" 
+        data-field="shippingAddress.name"
+        bindinput="onInputChange"
+        value="{{shippingAddress.name}}" />
+    </view>
+    <view class="form-group">
+      <input 
+        class="form-input" 
+        placeholder="Phone Number" 
+        data-field="shippingAddress.phone"
+        bindinput="onInputChange"
+        value="{{shippingAddress.phone}}" />
+    </view>
+    <view class="form-group">
+      <input 
+        class="form-input" 
+        placeholder="Address" 
+        data-field="shippingAddress.address"
+        bindinput="onInputChange"
+        value="{{shippingAddress.address}}" />
+    </view>
+    <view class="form-row">
+      <view class="form-group half">
+        <input 
+          class="form-input" 
+          placeholder="City" 
+          data-field="shippingAddress.city"
+          bindinput="onInputChange"
+          value="{{shippingAddress.city}}" />
+      </view>
+      <view class="form-group half">
+        <input 
+          class="form-input" 
+          placeholder="Postal Code" 
+          data-field="shippingAddress.postalCode"
+          bindinput="onInputChange"
+          value="{{shippingAddress.postalCode}}" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Payment Method -->
+  <view class="section">
+    <view class="section-title">
+      <text>Payment Method</text>
+    </view>
+    <view class="payment-methods">
+      <radio-group bindchange="onInputChange" data-field="paymentMethod">
+        <label class="radio-item">
+          <radio value="wechat" checked="{{paymentMethod === 'wechat'}}" />
+          <text>WeChat Pay</text>
+        </label>
+      </radio-group>
+    </view>
+  </view>
+
+  <!-- Terms and Conditions -->
+  <view class="section terms-section">
+    <label bindtap="onLabelTap">
+      <checkbox 
+        id="terms-checkbox"
+        value="true"
+        checked="{{termsAccepted}}" 
+        bindchange="onTermsChange" />
+      <text>I agree to the Terms and Conditions (Terms accepted: {{termsAccepted}})</text>
+    </label>
+  </view>
+
+  <!-- Test Button for Debugging -->
+  <view class="section">
+    <button bindtap="testCheckboxTrigger">Test Checkbox Trigger</button>
+  </view>
+
+  <!-- Place Order Button -->
+  <view class="footer">
+    <button 
+      class="place-order-btn button-primary" 
+      bindtap="onPlaceOrder"
+      disabled="{{loading}}">
+      Place Order
+    </button>
+  </view>
+</view>
