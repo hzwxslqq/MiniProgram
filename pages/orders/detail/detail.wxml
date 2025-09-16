@@ -1,0 +1,104 @@
+<!-- Order detail page structure -->
+<view class="container">
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>Loading order details...</text>
+  </view>
+
+  <!-- Order detail content -->
+  <view wx:else-if="{{order}}" class="order-detail">
+    <!-- Order header -->
+    <view class="order-header">
+      <text class="order-number">Order: {{order.orderNumber}}</text>
+      <text class="order-status {{order.status}}">{{order.status}}</text>
+    </view>
+
+    <!-- Order items -->
+    <view class="order-items-section">
+      <text class="section-title">Items</text>
+      <view class="order-items">
+        <view 
+          class="order-item" 
+          wx:for="{{order.items}}" 
+          wx:key="productId"
+        >
+          <image class="item-image" src="{{item.productImage}}" mode="aspectFill" />
+          <view class="item-details">
+            <text class="item-name">{{item.productName}}</text>
+            <text class="item-price">${{item.price}} x {{item.quantity}}</text>
+          </view>
+          <text class="item-total">${{item.price * item.quantity}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Order summary -->
+    <view class="order-summary-section">
+      <text class="section-title">Order Summary</text>
+      <view class="summary-row">
+        <text>Subtotal</text>
+        <text>${{order.subtotal}}</text>
+      </view>
+      <view class="summary-row">
+        <text>Shipping</text>
+        <text>${{order.shippingFee}}</text>
+      </view>
+      <view class="summary-row total">
+        <text>Total</text>
+        <text>${{order.totalAmount}}</text>
+      </view>
+    </view>
+
+    <!-- Shipping address -->
+    <view class="shipping-section">
+      <text class="section-title">Shipping Address</text>
+      <view class="address-details">
+        <text class="address-name">{{order.shippingAddress.name}}</text>
+        <text class="address-phone">{{order.shippingAddress.phone}}</text>
+        <text class="address-line">{{order.shippingAddress.address}}</text>
+        <text class="address-line">{{order.shippingAddress.city}}, {{order.shippingAddress.postalCode}}</text>
+      </view>
+    </view>
+
+    <!-- Tracking information -->
+    <view wx:if="{{order.trackingNumber}}" class="tracking-section">
+      <text class="section-title">Tracking Information</text>
+      <view class="tracking-details">
+        <view class="tracking-row">
+          <text>Tracking Number</text>
+          <view class="tracking-number-container">
+            <text class="tracking-number">{{order.trackingNumber}}</text>
+            <button class="copy-btn" bindtap="copyTrackingNumber">Copy</button>
+          </view>
+        </view>
+        <view class="tracking-row">
+          <text>Estimated Delivery</text>
+          <text>{{order.estimatedDelivery}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Order actions -->
+    <view class="order-actions">
+      <button 
+        wx:if="{{order.status === 'pending'}}" 
+        class="action-button pay-btn" 
+        bindtap="payOrder"
+      >
+        Pay Now
+      </button>
+      <button 
+        wx:if="{{order.status === 'shipped' || order.status === 'delivered'}}" 
+        class="action-button track-btn" 
+        bindtap="viewLogistics"
+      >
+        Track Order
+      </button>
+    </view>
+  </view>
+
+  <!-- Error state -->
+  <view wx:elif="{{!loading && !order}}" class="error-container">
+    <text>Failed to load order details</text>
+  </view>
+</view>

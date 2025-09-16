@@ -78,8 +78,15 @@ Page({
           selected: item.selected !== undefined ? item.selected : true // Default to selected if not specified
         }));
         
+        // Calculate total price
+        let totalPrice = 0;
+        cartItems.forEach(item => {
+          totalPrice += item.price * item.quantity;
+        });
+        
         this.setData({
-          cartItems: cartItems
+          cartItems: cartItems,
+          totalPrice: totalPrice
         });
       })
       .catch(err => {

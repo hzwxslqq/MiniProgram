@@ -84,7 +84,7 @@
           Pay Now
         </button>
         <button 
-          wx:if="{{item.status === 'shipped' || item.status === 'delivered'}}" 
+          wx:if="{{item.status === 'shipped' || item.status === 'delivered' || item.status === 'paid'}}" 
           class="action-button track-btn" 
           bindtap="viewLogistics" 
           data-order="{{item}}"

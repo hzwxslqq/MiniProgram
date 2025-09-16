@@ -89,79 +89,47 @@ Page({
     });
   },
 
-  // Quick order (Buy Now)
+  // Quick order (Buy Now) - Fixed to follow proper checkout flow
   onQuickOrder: function(e) {
     const product = e.currentTarget.dataset.product;
     
-    // First, try to get user's default address
-    api.addresses.getList()
-      .then(res => {
-        let shippingAddress = {
-          name: 'Customer',
-          phone: '123456789',
-          address: '123 Main St',
-          city: 'City',
-          postalCode: '12345'
-        };
-        
-        // Use default address if available
-        const defaultAddress = res.data.find(addr => addr.isDefault);
-        if (defaultAddress) {
-          shippingAddress = {
-            name: defaultAddress.name,
-            phone: defaultAddress.phone,
-            address: defaultAddress.address,
-            city: defaultAddress.city,
-            postalCode: defaultAddress.postalCode
-          };
-        }
-        
-        // Create order directly
-        const orderData = {
-          items: [{
-            productId: product.id,
-            quantity: 1
-          }],
-          shippingAddress: shippingAddress
-        };
+    wx.showLoading({
+      title: 'Adding to cart...'
+    });
     
-        // Show loading
-        wx.showLoading({
-          title: 'Processing order...'
-        });
-        
-        // Create order via API
-        return api.orders.create(orderData);
-      })
-      .then(res => {
-        const orderId = res.data.id;
-        
-        // Process payment
-        return api.orders.pay(orderId, {
-          paymentMethod: 'wechat'
-        });
-      })
+    // Add product to cart first
+    api.cart.addItem({
+      productId: product.id,
+      quantity: 1
+    })
       .then(res => {
         wx.hideLoading();
-        wx.showToast({
-          title: 'Order placed successfully!',
-          icon: 'success'
+        // Navigate to checkout page
+        wx.navigateTo({
+          url: `/pages/checkout/checkout?total=${product.price}`
         });
-        
-        // Redirect to orders page after a short delay
-        setTimeout(() => {
-          wx.navigateTo({
-            url: '/pages/orders/orders'
-          });
-        }, 1500);
       })
       .catch(err => {
         wx.hideLoading();
+        console.error('Add to cart error:', err);
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'Failed to add product to cart';
+        if (err.status === 401) {
+          errorMessage = 'Please login first';
+        } else if (err.status === 400) {
+          errorMessage = 'Invalid product data';
+        } else if (err.status === 500) {
+          errorMessage = 'Server error';
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
         wx.showToast({
-          title: 'Order failed: ' + (err.message || 'Unknown error'),
-          icon: 'none'
+          title: errorMessage,
+          icon: 'none',
+          duration: 3000
         });
-        console.error('Quick order error:', err);
       });
   },
 
