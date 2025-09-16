@@ -1,0 +1,81 @@
+<!-- Tracking page structure -->
+<view class="container">
+  <view class="tracking-header">
+    <text class="header-title">Order Tracking</text>
+  </view>
+
+  <!-- Loading indicator -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>Loading tracking information...</text>
+  </view>
+
+  <!-- Error message -->
+  <view wx:elif="{{error}}" class="error-container">
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="refreshTracking">Retry</button>
+  </view>
+
+  <!-- Tracking information -->
+  <view wx:elif="{{trackingInfo}}" class="tracking-content">
+    <!-- Order info -->
+    <view class="order-info-card">
+      <view class="info-row">
+        <text class="label">Order ID:</text>
+        <text class="value">{{trackingInfo.orderId}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">Tracking Number:</text>
+        <text class="value">{{trackingInfo.trackingNumber}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">Carrier:</text>
+        <text class="value">{{trackingInfo.carrier}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">Status:</text>
+        <text class="value status-{{trackingInfo.status.toLowerCase()}}">{{trackingInfo.status}}</text>
+      </view>
+      <view class="info-row" wx:if="{{trackingInfo.estimatedDelivery}}">
+        <text class="label">Estimated Delivery:</text>
+        <text class="value">{{trackingInfo.estimatedDelivery}}</text>
+      </view>
+    </view>
+
+    <!-- Tracking events timeline -->
+    <view class="timeline-container">
+      <text class="section-title">Tracking Events</text>
+      <view class="timeline">
+        <view 
+          class="timeline-item" 
+          wx:for="{{trackingInfo.events}}" 
+          wx:key="timestamp"
+        >
+          <view class="timeline-marker">
+            <view class="marker-circle"></view>
+          </view>
+          <view class="timeline-content">
+            <view class="event-header">
+              <text class="event-status">{{item.status}}</text>
+              <text class="event-time">{{item.formattedTimestamp}}</text>
+            </view>
+            <text class="event-location">{{item.location}}</text>
+            <text class="event-description">{{item.description}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Actions -->
+  <view class="actions-container">
+    <button class="action-button refresh-btn" bindtap="refreshTracking">
+      Refresh
+    </button>
+    <button class="action-button toggle-btn" bindtap="toggleTracking">
+      {{refreshInterval ? 'Disable Auto' : 'Enable Auto'}}
+    </button>
+    <button class="action-button back-btn" bindtap="goBack">
+      Back to Orders
+    </button>
+  </view>
+</view>

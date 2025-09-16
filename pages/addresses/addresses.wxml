@@ -1,0 +1,119 @@
+<view class="container">
+  <view class="header">
+    <text class="title">Saved Addresses</text>
+    <button class="add-btn" bindtap="toggleAddForm">+ Add Address</button>
+  </view>
+
+  <!-- Main content -->
+  <view class="main-content">
+    <!-- Loading indicator -->
+    <view wx:if="{{loading}}" class="loading">
+      <text>Loading...</text>
+    </view>
+
+    <!-- Address list -->
+    <view wx:if="{{!loading}}" class="address-list">
+      <view wx:if="{{addresses.length === 0}}" class="empty">
+        <text>No saved addresses</text>
+      </view>
+
+      <view wx:else>
+        <view class="address-item" wx:for="{{addresses}}" wx:key="id">
+          <view class="address-header">
+            <text class="address-name">{{item.name}}</text>
+            <view wx:if="{{item.isDefault}}" class="default-tag">Default</view>
+          </view>
+          
+          <view class="address-details">
+            <text class="address-text">{{item.phone}}</text>
+            <text class="address-text">{{item.address}}, {{item.city}}, {{item.postalCode}}</text>
+          </view>
+          
+          <view class="address-actions">
+            <button class="action-btn edit-btn" bindtap="toggleEditForm" data-address="{{item}}">Edit</button>
+            <button class="action-btn delete-btn" bindtap="onDeleteAddress" data-address="{{item}}">Delete</button>
+            <button wx:if="{{!item.isDefault}}" class="action-btn default-btn" bindtap="onSetDefault" data-address="{{item}}">Set as Default</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Add Address Form -->
+  <view wx:if="{{showAddForm}}" class="form-overlay">
+    <view class="form-container">
+      <view class="form-header">
+        <text class="form-title">Add New Address</text>
+        <button class="close-btn" bindtap="toggleAddForm">✕</button>
+      </view>
+      
+      <form class="address-form">
+        <view class="form-group">
+          <input class="form-input" placeholder="Full Name" data-field="name" value="{{formData.name}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Phone Number" data-field="phone" value="{{formData.phone}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Address" data-field="address" value="{{formData.address}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="City" data-field="city" value="{{formData.city}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Postal Code" data-field="postalCode" value="{{formData.postalCode}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group checkbox-group">
+          <checkbox class="form-checkbox" checked="{{formData.isDefault}}" bindchange="onDefaultChange" />
+          <text class="checkbox-label">Set as default address</text>
+        </view>
+        
+        <button class="submit-btn" bindtap="onAddAddress">Add Address</button>
+      </form>
+    </view>
+  </view>
+
+  <!-- Edit Address Form -->
+  <view wx:if="{{showEditForm}}" class="form-overlay">
+    <view class="form-container">
+      <view class="form-header">
+        <text class="form-title">Edit Address</text>
+        <button class="close-btn" bindtap="toggleEditForm">✕</button>
+      </view>
+      
+      <form class="address-form">
+        <view class="form-group">
+          <input class="form-input" placeholder="Full Name" data-field="name" value="{{formData.name}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Phone Number" data-field="phone" value="{{formData.phone}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Address" data-field="address" value="{{formData.address}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="City" data-field="city" value="{{formData.city}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group">
+          <input class="form-input" placeholder="Postal Code" data-field="postalCode" value="{{formData.postalCode}}" bindinput="onInputChange" />
+        </view>
+        
+        <view class="form-group checkbox-group">
+          <checkbox class="form-checkbox" checked="{{formData.isDefault}}" bindchange="onDefaultChange" />
+          <text class="checkbox-label">Set as default address</text>
+        </view>
+        
+        <button class="submit-btn" bindtap="onUpdateAddress">Update Address</button>
+      </form>
+    </view>
+  </view>
+</view>

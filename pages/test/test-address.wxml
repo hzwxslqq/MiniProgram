@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="header">
+    <text class="title">Address Management Tests</text>
+  </view>
+
+  <view class="controls">
+    <button class="run-btn" bindtap="runTests" disabled="{{loading}}">
+      {{loading ? 'Running...' : 'Run Tests'}}
+    </button>
+    <button class="clear-btn" bindtap="clearResults" disabled="{{loading}}">
+      Clear Results
+    </button>
+  </view>
+
+  <view class="results">
+    <view wx:if="{{testResults.length === 0}}" class="no-results">
+      <text>No test results yet. Click "Run Tests" to start.</text>
+    </view>
+    
+    <view wx:else class="results-list">
+      <view class="result-item {{item.success ? 'success' : 'fail'}}" wx:for="{{testResults}}" wx:key="timestamp">
+        <view class="result-header">
+          <text class="result-status">{{item.success ? 'PASS' : 'FAIL'}}</text>
+          <text class="result-time">{{item.timestamp}}</text>
+        </view>
+        <text class="result-description">{{item.description}}</text>
+        <text wx:if="{{item.details}}" class="result-details">{{item.details}}</text>
+      </view>
+    </view>
+  </view>
+</view>

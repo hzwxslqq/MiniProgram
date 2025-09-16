@@ -53,6 +53,56 @@
   margin-top: 20rpx;
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 40rpx 0;
+}
+
+.divider-text {
+  margin: 0 20rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.wechat-login-button {
+  width: 100%;
+  background-color: #07c160;
+  border: none;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.wechat-login-button::after {
+  border: none;
+}
+
+.wechat-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+
+.wechat-login-text {
+  color: white;
+  font-size: 32rpx;
+}
+
+.button-hover {
+  background-color: #06ad56;
+}
+
+.instruction-text {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
 .register-link {
   text-align: center;
   font-size: 28rpx;

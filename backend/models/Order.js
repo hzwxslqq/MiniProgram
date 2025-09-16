@@ -10,7 +10,7 @@ class Order {
     this.subtotal = data.subtotal;
     this.shippingFee = data.shippingFee;
     this.totalAmount = data.totalAmount;
-    this.status = data.status;
+    this.status = data.status || 'pending'; // Set default status to pending
     this.shippingAddress = data.shippingAddress;
     this.paymentMethod = data.paymentMethod;
     this.paymentId = data.paymentId;

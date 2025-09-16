@@ -1,0 +1,17 @@
+<view class="container">
+  <text>{{message}}</text>
+  
+  <button bindtap="onWeChatLogin">Test WeChat Login</button>
+  
+  <button open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+    Test Get Phone Number
+  </button>
+  
+  <button bindtap="onNavigateToCheckout">
+    Test Navigate to Checkout
+  </button>
+  
+  <button bindtap="onNavigateToPayment">
+    Test Navigate to Payment
+  </button>
+</view>

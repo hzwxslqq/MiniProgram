@@ -18,10 +18,11 @@ const initDB = () => {
         {
           id: '1',
           username: 'admin',
-          password: '$2a$10$8K1p/a0dhrxiowP.dnkgNORTWgdEDHn5L2/xjpEWuC.QQv4rKO9jO', // password: admin123
+          password: '$2a$10$NejtIbUTfAI7IsnBnIrulu6Ov1u1niYMGqYxxCOfTpgSnsYUO/45K', // password: admin123
           email: 'admin@example.com',
           phone: '1234567890',
           avatar: '',
+          wechatOpenId: '', // WeChat openid field
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -265,6 +266,22 @@ const initDB = () => {
         }
       ]
     };
+    
+    // Add userAddresses collection
+    initialData.userAddresses = [
+      {
+        id: '1',
+        userId: '1',
+        name: 'John Doe',
+        phone: '1234567890',
+        address: '123 Main St',
+        city: 'New York',
+        postalCode: '10001',
+        isDefault: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
     
     fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
   }

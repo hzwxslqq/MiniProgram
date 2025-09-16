@@ -3,7 +3,14 @@
     "pages/login/login",
     "pages/home/home",
     "pages/cart/cart",
-    "pages/orders/orders"
+    "pages/checkout/checkout",
+    "pages/orders/orders",
+    "pages/payment/payment",
+    "pages/payment-success/payment-success",
+    "pages/orders/tracking",
+    "pages/addresses/addresses",
+    "pages/test/test",
+    "pages/test/test-address"
   ],
   "window": {
     "backgroundTextStyle": "light",

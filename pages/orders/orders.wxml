@@ -2,6 +2,7 @@
 <view class="container">
   <view class="orders-header">
     <text class="header-title">My Orders</text>
+    <button class="address-btn" bindtap="goToAddresses">Addresses</button>
   </view>
 
   <!-- Order tabs -->
@@ -37,7 +38,7 @@
   </view>
 
   <!-- Empty orders state -->
-  <view wx:if="{{!loading && getFilteredOrders().length === 0}}" class="empty-orders">
+  <view wx:if="{{!loading && filteredOrders.length === 0}}" class="empty-orders">
     <image class="empty-orders-image" src="/images/empty_orders.png" mode="aspectFit" />
     <text class="empty-orders-text">No orders found</text>
   </view>
@@ -46,7 +47,7 @@
   <view wx:else class="orders-list">
     <view 
       class="order-card" 
-      wx:for="{{getFilteredOrders()}}" 
+      wx:for="{{filteredOrders}}" 
       wx:key="id"
     >
       <view class="order-header">
