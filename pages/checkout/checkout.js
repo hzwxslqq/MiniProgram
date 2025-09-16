@@ -264,5 +264,5 @@ Page({
     }
 
     return true;
-  },
+  }
 });
