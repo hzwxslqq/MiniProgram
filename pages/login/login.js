@@ -7,7 +7,8 @@ Page({
     password: '',
     loading: false,
     errorMessage: '',
-    wechatLoading: false
+    wechatLoading: false,
+    wechatAuthLoading: false
   },
 
   // Handle username input
@@ -89,75 +90,133 @@ Page({
     });
   },
 
-  // Handle WeChat mobile login
-  onWeChatMobileLogin: function(e) {
-    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
-      wx.showToast({
-        title: 'Authorization failed',
-        icon: 'none'
-      });
-      return;
-    }
-
-    const encryptedData = e.detail.encryptedData;
-    const iv = e.detail.iv;
-
+  // Handle WeChat authorization login
+  onWeChatAuthLogin: function() {
+    console.log('Starting WeChat authorization login process');
+    
     this.setData({
-      wechatLoading: true
+      wechatAuthLoading: true,
+      errorMessage: ''
     });
-    wx.login({
-      success: loginRes => {
-        const code = loginRes.code;
 
-        // Call backend API to decrypt the phone number
-        wx.request({
-          url: 'http://localhost:3000/api/auth/wechat-mobile-login',
-          method: 'POST',
-          data: {
-            code,
-            encryptedData,
-            iv
-          },
-          header: {
-            'content-type': 'application/json'
-          },
-          success: res => {
-            if (res.data.token) {
-              // Save token and navigate to home page
-              wx.setStorageSync('token', res.data.token);
-              wx.switchTab({
-                url: '/pages/home/home'
+    // Get user profile information FIRST (must be direct response to user tap)
+    console.log('Requesting user profile information');
+    wx.getUserProfile({
+      desc: '用于完善会员资料', // Declaration for obtaining user profile
+      success: (profileRes) => {
+        console.log('WeChat getUserProfile success:', profileRes);
+        const userInfo = profileRes.userInfo;
+        
+        // Validate user info
+        if (!userInfo) {
+          this.setData({
+            wechatAuthLoading: false,
+            errorMessage: 'Failed to get user profile information'
+          });
+          return;
+        }
+        
+        // Now get the WeChat login code
+        wx.login({
+          success: (loginRes) => {
+            console.log('WeChat login success, code received:', loginRes.code);
+            const code = loginRes.code;
+            
+            // Check if code is valid
+            if (!code) {
+              this.setData({
+                wechatAuthLoading: false,
+                errorMessage: 'Failed to get WeChat authorization code'
               });
-            } else {
-              wx.showToast({
-                title: 'Login failed',
-                icon: 'none'
-              });
+              return;
             }
-          },
-          fail: err => {
-            wx.showToast({
-              title: 'Network request failed',
-              icon: 'none'
+            
+            console.log('Sending user info to backend:', { code, userInfo });
+            
+            // Send to backend using API utility
+            auth.wechatLogin({
+              code: code,
+              userInfo: userInfo
+            })
+            .then((response) => {
+              console.log('Backend wechatLogin response:', response);
+              // Handle both cloud function and HTTP API responses
+              const token = response.token || (response.result && response.result.token);
+              const user = response.user || (response.result && response.result.user);
+              
+              if (token) {
+                // Save token
+                getApp().setToken(token);
+                
+                // Show success message
+                wx.showToast({
+                  title: 'Login successful',
+                  icon: 'success',
+                  duration: 1500
+                });
+                
+                // Navigate to home page after a short delay
+                setTimeout(() => {
+                  wx.switchTab({
+                    url: '/pages/home/home'
+                  });
+                }, 1500);
+              } else {
+                this.setData({
+                  errorMessage: response.message || response.error || 'WeChat login failed'
+                });
+              }
+            })
+            .catch((err) => {
+              console.error('WeChat login error:', err);
+              this.setData({
+                errorMessage: err.data?.message || err.message || 'WeChat login failed, please try again'
+              });
+            })
+            .finally(() => {
+              this.setData({
+                wechatAuthLoading: false
+              });
             });
           },
-          complete: () => {
+          fail: (err) => {
+            console.error('WeChat login initialization failed:', err);
             this.setData({
-              wechatLoading: false
+              wechatAuthLoading: false,
+              errorMessage: 'Failed to initialize WeChat login: ' + (err.errMsg || err.message || 'Unknown error')
             });
           }
         });
       },
-      fail: err => {
-        wx.showToast({
-          title: 'Failed to get login code',
-          icon: 'none'
-        });
+      fail: (err) => {
+        console.error('WeChat getUserProfile failed:', err);
+        // User denied authorization or other error
+        if (err.errMsg && err.errMsg.includes('auth deny')) {
+          this.setData({
+            errorMessage: 'Please authorize to login with WeChat. Tap the button again and allow profile access.'
+          });
+        } else if (err.errMsg && err.errMsg.includes('auth cancel')) {
+          this.setData({
+            errorMessage: 'You cancelled the WeChat authorization. Please tap the button again to continue.'
+          });
+        } else if (err.errMsg && err.errMsg.includes('getUserProfile:fail')) {
+          this.setData({
+            errorMessage: 'Failed to get WeChat profile. Please make sure you are using the latest version of WeChat and try again.'
+          });
+        } else {
+          this.setData({
+            errorMessage: 'Failed to get WeChat profile: ' + (err.errMsg || err.message || 'Unknown error')
+          });
+        }
         this.setData({
-          wechatLoading: false
+          wechatAuthLoading: false
         });
       }
     });
+  },
+
+  // Handle WeChat mobile login
+  onWeChatMobileLogin: function(e) {
     // Check if user denied the authorization
     if (e.detail.errMsg === "getPhoneNumber:fail auth deny") {
       // Show explanation to user with proper text length

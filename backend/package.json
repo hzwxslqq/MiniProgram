@@ -5,10 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start-mysql": "node start-mysql.js",
+    "start-mysql": "node start-mysql-server.js",
     "dev": "nodemon server.js",
     "init-db": "node scripts/initDB.js",
-    "init-mysql-db": "node scripts/initMySQLDB.js"
+    "init-mysql-db": "node scripts/initMySQLDB.js",
+    "migrate-data": "node migrate-data.js"
   },
   "dependencies": {
     "axios": "^1.12.1",

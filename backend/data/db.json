@@ -190,25 +190,25 @@
   "cartItems": [
     {
       "userId": "1",
-      "productId": "4",
-      "productName": "Phone Case",
-      "productImage": "/images/product4.png",
-      "price": 24.99,
+      "productId": "1",
+      "productName": "Wireless Headphones",
+      "productImage": "/images/product1.png",
+      "price": 129.99,
       "quantity": 1,
-      "id": "1758032798063",
-      "createdAt": "2025-09-16T14:26:38.063Z",
-      "updatedAt": "2025-09-16T14:26:38.063Z"
+      "id": "1758068965744",
+      "createdAt": "2025-09-17T00:29:25.744Z",
+      "updatedAt": "2025-09-17T00:29:25.744Z"
     },
     {
       "userId": "1",
-      "productId": "3",
-      "productName": "Bluetooth Speaker",
-      "productImage": "/images/product3.png",
-      "price": 79.99,
-      "quantity": 1,
-      "id": "1758032833731",
-      "createdAt": "2025-09-16T14:27:13.731Z",
-      "updatedAt": "2025-09-16T14:27:13.731Z"
+      "productId": "2",
+      "productName": "Smart Watch",
+      "productImage": "/images/product2.png",
+      "price": 199.99,
+      "quantity": 2,
+      "id": "1758068967056",
+      "createdAt": "2025-09-17T00:29:27.056Z",
+      "updatedAt": "2025-09-17T00:29:29.788Z"
     }
   ],
   "orders": [
@@ -1712,6 +1712,43 @@
       "paymentId": "TXN1758032845817",
       "trackingNumber": "TRK1758032845817",
       "estimatedDelivery": "2025-09-19T14:27:25.817Z"
+    },
+    {
+      "userId": "1",
+      "orderNumber": "ORD-20250917-258",
+      "items": [
+        {
+          "productId": "1",
+          "productName": "Wireless Headphones",
+          "productImage": "/images/product1.png",
+          "quantity": 1,
+          "price": 129.99
+        },
+        {
+          "productId": "2",
+          "productName": "Smart Watch",
+          "productImage": "/images/product2.png",
+          "quantity": 2,
+          "price": 199.99
+        }
+      ],
+      "subtotal": 529.97,
+      "shippingFee": 0,
+      "totalAmount": 529.97,
+      "status": "paid",
+      "shippingAddress": {
+        "name": "test",
+        "phone": "17727973929",
+        "address": "广东",
+        "city": "深圳",
+        "postalCode": "518000"
+      },
+      "id": "1758068995096",
+      "createdAt": "2025-09-17T00:29:55.096Z",
+      "updatedAt": "2025-09-17T00:29:59.913Z",
+      "paymentId": "TXN1758068999913",
+      "trackingNumber": "TRK1758068999913",
+      "estimatedDelivery": "2025-09-20T00:29:59.913Z"
     }
   ],
   "userAddresses": [

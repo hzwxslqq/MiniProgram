@@ -27,10 +27,22 @@ const initDB = async () => {
         email VARCHAR(255),
         phone VARCHAR(20),
         avatar VARCHAR(255),
+        wechatOpenId VARCHAR(255) UNIQUE,  -- Add this line
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+    
+    // Add wechatOpenId column if it doesn't exist (for existing databases)
+    try {
+      await pool.execute('ALTER TABLE users ADD COLUMN wechatOpenId VARCHAR(255) UNIQUE');
+      console.log('Added wechatOpenId column to users table');
+    } catch (error) {
+      // Column might already exist, ignore error
+      if (error.code !== 'ER_DUP_FIELDNAME') {
+        console.log('Note: wechatOpenId column might already exist');
+      }
+    }
     
     // Create products table
     await pool.execute(`

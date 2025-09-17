@@ -1,6 +1,11 @@
 // API request utilities
 const BASE_URL = 'http://localhost:3000';
 
+// Check if we're running in WeChat Mini-Program environment with properly configured cloud
+const isWeChatEnvironment = () => {
+  return typeof wx !== 'undefined' && wx.cloud && wx.cloud.init;
+};
+
 // Common headers
 const getHeaders = () => {
   const token = getApp().getToken();
@@ -15,8 +20,8 @@ const getHeaders = () => {
   return headers;
 };
 
-// Generic request function
-const request = (options) => {
+// Generic HTTP request function
+const httpRequest = (options) => {
   return new Promise((resolve, reject) => {
     wx.request({
       url: BASE_URL + options.url,
@@ -71,18 +76,122 @@ const request = (options) => {
   });
 };
 
+// Generic cloud function call
+const callCloudFunction = (functionName, data = {}) => {
+  return new Promise((resolve, reject) => {
+    if (!isWeChatEnvironment()) {
+      reject(new Error('Cloud functions can only be called in WeChat environment with cloud development properly configured'));
+      return;
+    }
+    
+    wx.cloud.callFunction({
+      name: functionName,
+      data: data,
+      success: res => {
+        if (res.result && res.result.success) {
+          resolve(res.result);
+        } else {
+          reject(new Error(res.result?.error || 'Cloud function call failed'));
+        }
+      },
+      fail: err => {
+        console.error(`Cloud function ${functionName} failed:`, err);
+        reject(new Error(`Cloud function ${functionName} failed: ${err.errMsg}`));
+      }
+    });
+  });
+};
+
+// Generic request function that uses either HTTP or cloud functions
+const request = (options) => {
+  // Use cloud functions if available and properly configured, otherwise use HTTP
+  if (isWeChatEnvironment() && options.useCloud !== false) {
+    // Map HTTP endpoints to cloud function names
+    const endpointMap = {
+      '/api/auth/login': 'login',
+      '/api/auth/wechat-login': 'wechatLogin',
+      '/api/products': 'getProducts',
+      '/api/cart': 'addToCart',
+      '/api/orders': 'createOrder'
+    };
+    
+    const functionName = endpointMap[options.url];
+    if (functionName) {
+      return callCloudFunction(functionName, options.data)
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn(`Cloud function ${functionName} failed, falling back to HTTP:`, error.message);
+          return httpRequest(options);
+        });
+    }
+  }
+  
+  // Fallback to HTTP request
+  return httpRequest(options);
+};
+
 // Authentication APIs
 const auth = {
   login: (data) => {
-    return request({
-      url: '/api/auth/login',
-      method: 'POST',
-      data: data
-    });
+    if (isWeChatEnvironment()) {
+      // For WeChat login, we can use the login cloud function
+      return callCloudFunction('login', data)
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function login failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/auth/login',
+            method: 'POST',
+            data: data
+          });
+        });
+    } else {
+      // For regular login, use HTTP
+      return httpRequest({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: data
+      });
+    }
+  },
+  
+  // WeChat authorization login
+  wechatLogin: (data) => {
+    if (isWeChatEnvironment()) {
+      // For WeChat authorization login, we can use the wechatLogin cloud function
+      return callCloudFunction('wechatLogin', data)
+        .then((result) => {
+          // Cloud function returns success flag and token directly
+          if (result.success) {
+            return Promise.resolve({
+              token: result.token,
+              user: result.user
+            });
+          } else {
+            return Promise.reject(new Error(result.error || 'WeChat login failed'));
+          }
+        })
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function wechatLogin failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/auth/wechat-login',
+            method: 'POST',
+            data: data
+          });
+        });
+    } else {
+      // For regular WeChat login, use HTTP
+      return httpRequest({
+        url: '/api/auth/wechat-login',
+        method: 'POST',
+        data: data
+      });
+    }
   },
   
   register: (data) => {
-    return request({
+    return httpRequest({
       url: '/api/auth/register',
       method: 'POST',
       data: data
@@ -91,7 +200,7 @@ const auth = {
   
   // WeChat mobile login
   wechatMobileLogin: (data) => {
-    return request({
+    return httpRequest({
       url: '/api/auth/wechat-mobile-login',
       method: 'POST',
       data: data
@@ -102,22 +211,37 @@ const auth = {
 // Product APIs
 const products = {
   getList: (params) => {
-    return request({
-      url: '/api/products',
-      method: 'GET',
-      data: params
-    });
+    if (isWeChatEnvironment()) {
+      // Use cloud function for WeChat environment
+      return callCloudFunction('getProducts', params)
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function getProducts failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/products',
+            method: 'GET',
+            data: params
+          });
+        });
+    } else {
+      // Use HTTP for non-WeChat environment
+      return httpRequest({
+        url: '/api/products',
+        method: 'GET',
+        data: params
+      });
+    }
   },
   
   getDetail: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/products/${id}`,
       method: 'GET'
     });
   },
   
   getCategories: () => {
-    return request({
+    return httpRequest({
       url: '/api/products/categories',
       method: 'GET'
     });
@@ -127,22 +251,37 @@ const products = {
 // Cart APIs
 const cart = {
   getList: () => {
-    return request({
+    return httpRequest({
       url: '/api/cart',
       method: 'GET'
     });
   },
   
   addItem: (data) => {
-    return request({
-      url: '/api/cart',
-      method: 'POST',
-      data: data
-    });
+    if (isWeChatEnvironment()) {
+      // Use cloud function for WeChat environment
+      return callCloudFunction('addToCart', data)
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function addToCart failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/cart',
+            method: 'POST',
+            data: data
+          });
+        });
+    } else {
+      // Use HTTP for non-WeChat environment
+      return httpRequest({
+        url: '/api/cart',
+        method: 'POST',
+        data: data
+      });
+    }
   },
   
   updateItem: (id, data) => {
-    return request({
+    return httpRequest({
       url: `/api/cart/${id}`,
       method: 'PUT',
       data: data
@@ -150,7 +289,7 @@ const cart = {
   },
   
   removeItem: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/cart/${id}`,
       method: 'DELETE'
     });
@@ -160,29 +299,44 @@ const cart = {
 // Order APIs
 const orders = {
   create: (data) => {
-    return request({
-      url: '/api/orders',
-      method: 'POST',
-      data: data
-    });
+    if (isWeChatEnvironment()) {
+      // Use cloud function for WeChat environment
+      return callCloudFunction('createOrder', data)
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function createOrder failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/orders',
+            method: 'POST',
+            data: data
+          });
+        });
+    } else {
+      // Use HTTP for non-WeChat environment
+      return httpRequest({
+        url: '/api/orders',
+        method: 'POST',
+        data: data
+      });
+    }
   },
   
   getList: () => {
-    return request({
+    return httpRequest({
       url: '/api/orders',
       method: 'GET'
     });
   },
   
   getDetail: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/orders/${id}`,
       method: 'GET'
     });
   },
   
   pay: (id, data) => {
-    return request({
+    return httpRequest({
       url: `/api/orders/${id}/payment`,
       method: 'POST',
       data: data
@@ -190,7 +344,7 @@ const orders = {
   },
   
   getTracking: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/orders/${id}/tracking`,
       method: 'GET'
     });
@@ -200,14 +354,14 @@ const orders = {
 // Address APIs
 const addresses = {
   getList: () => {
-    return request({
+    return httpRequest({
       url: '/api/user/addresses',
       method: 'GET'
     });
   },
   
   create: (data) => {
-    return request({
+    return httpRequest({
       url: '/api/user/addresses',
       method: 'POST',
       data: data
@@ -215,7 +369,7 @@ const addresses = {
   },
   
   update: (id, data) => {
-    return request({
+    return httpRequest({
       url: `/api/user/addresses/${id}`,
       method: 'PUT',
       data: data
@@ -223,14 +377,14 @@ const addresses = {
   },
   
   delete: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/user/addresses/${id}`,
       method: 'DELETE'
     });
   },
   
   setDefault: (id) => {
-    return request({
+    return httpRequest({
       url: `/api/user/addresses/${id}/default`,
       method: 'PUT'
     });

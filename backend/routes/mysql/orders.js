@@ -5,7 +5,7 @@ const auth = require('../../middleware/auth');
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(auth);
+router.use(auth.authenticate);
 
 // Get orders
 router.get('/', getOrders);

@@ -45,7 +45,8 @@
     "useCompilerPlugins": false,
     "condition": false,
     "swc": false,
-    "disableSWC": true
+    "disableSWC": true,
+    "cloudfunctionRoot": "cloudfunctions/"
   },
   "compileType": "miniprogram",
   "libVersion": "2.24.7",
@@ -73,5 +74,6 @@
     }
   },
   "simulatorPluginLibVersion": {},
-  "editorSetting": {}
+  "editorSetting": {},
+  "cloudfunctionRoot": "cloudfunctions/"
 }

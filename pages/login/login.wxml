@@ -44,6 +44,27 @@
       <text class="divider-text">or</text>
     </view>
 
+    <!-- WeChat Authorization Login Button -->
+    <button 
+      class="wechat-login-button" 
+      bindtap="onWeChatAuthLogin"
+      hover-class="button-hover"
+      loading="{{wechatAuthLoading}}"
+      disabled="{{wechatAuthLoading}}"
+    >
+      <image class="wechat-icon" src="/images/wechat_icon.png" mode="aspectFit" />
+      <text class="wechat-login-text">Login with WeChat</text>
+    </button>
+
+    <!-- Instructional text for WeChat login -->
+    <view class="instruction-text">
+      <text>Tapping above will prompt for profile access. Please allow access to login with your WeChat profile.</text>
+    </view>
+
+    <view class="divider">
+      <text class="divider-text">or</text>
+    </view>
+
     <!-- WeChat Mobile Login Button -->
     <button 
       class="wechat-login-button" 
@@ -57,7 +78,7 @@
       <text class="wechat-login-text">Login with WeChat Mobile</text>
     </button>
     
-    <!-- Instructional text for WeChat login -->
+    <!-- Instructional text for WeChat mobile login -->
     <view class="instruction-text">
       <text>Tapping above will prompt for phone number access</text>
     </view>

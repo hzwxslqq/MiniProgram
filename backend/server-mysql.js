@@ -2,9 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const path = require('path');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from the correct path
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// Explicitly set JWT_SECRET if not loaded from .env
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'online-store-secret-key';
+  console.log('JWT_SECRET not found in .env, using default value');
+}
 
 // Import MySQL database utilities
 const { initDB } = require('./utils/mysql');
@@ -60,6 +67,7 @@ app.use('*', (req, res) => {
 // Start server
 app.listen(PORT, async () => {
   console.log(`MySQL Server is running on port ${PORT}`);
+  console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'Loaded' : 'Not loaded'}`);
   
   // Seed data
   const Product = require('./models/mysql/Product');

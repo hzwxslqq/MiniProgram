@@ -10,6 +10,7 @@ class User {
     this.email = data.email;
     this.phone = data.phone;
     this.avatar = data.avatar;
+    this.wechatOpenId = data.wechatOpenId; // Add this line
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
   }
@@ -32,8 +33,8 @@ class User {
       if (this.id) {
         // Update existing user
         const [result] = await pool.execute(
-          'UPDATE users SET username = ?, password = ?, email = ?, phone = ?, avatar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-          [this.username, this.password, this.email, this.phone, this.avatar, this.id]
+          'UPDATE users SET username = ?, password = ?, email = ?, phone = ?, avatar = ?, wechatOpenId = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+          [this.username, this.password, this.email, this.phone, this.avatar, this.wechatOpenId, this.id]
         );
         return result.affectedRows > 0;
       } else {
@@ -43,8 +44,8 @@ class User {
         this.password = await bcrypt.hash(this.password, salt);
         
         const [result] = await pool.execute(
-          'INSERT INTO users (username, password, email, phone, avatar) VALUES (?, ?, ?, ?, ?)',
-          [this.username, this.password, this.email, this.phone, this.avatar]
+          'INSERT INTO users (username, password, email, phone, avatar, wechatOpenId) VALUES (?, ?, ?, ?, ?, ?)',
+          [this.username, this.password, this.email, this.phone, this.avatar, this.wechatOpenId]
         );
         
         this.id = result.insertId;

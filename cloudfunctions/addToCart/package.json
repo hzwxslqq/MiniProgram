@@ -1,0 +1,9 @@
+{
+  "name": "addToCart",
+  "version": "1.0.0",
+  "description": "WeChat Cloud Function for adding items to cart",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.1"
+  }
+}
