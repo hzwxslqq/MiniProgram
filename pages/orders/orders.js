@@ -29,23 +29,32 @@ Page({
       .then(res => {
         console.log('Orders API response:', res);
         // Transform API response to match expected format
-        const orders = res.data.map(order => ({
-          id: order.id,
-          orderNumber: order.orderNumber,
-          status: order.status,
-          statusText: this.getStatusText(order.status),
-          totalAmount: order.totalAmount,
-          items: order.items.map((item, index) => ({
-            id: `${order.id}-${index}`, // Use unique id for list rendering
-            name: item.productName,
-            image: item.productImage,
-            price: item.price,
-            quantity: item.quantity
-          })),
-          trackingNumber: order.trackingNumber || '',
-          estimatedDelivery: order.estimatedDelivery || '',
-          createdAt: this.formatDate(order.createdAt)
-        }));
+        const orders = res.data.map(order => {
+          // Ensure we're working with the correct data structure
+          const orderData = order.data || order;
+          
+          return {
+            id: orderData.id,
+            orderNumber: orderData.order_number || orderData.orderNumber,
+            status: orderData.status,
+            statusText: this.getStatusText(orderData.status),
+            totalAmount: orderData.total_amount !== undefined ? orderData.total_amount : orderData.totalAmount,
+            items: Array.isArray(orderData.items) ? orderData.items.map((item, index) => {
+              // Handle both database and frontend item structures
+              const itemData = item.data || item;
+              return {
+                id: `${orderData.id}-${index}`, // Use unique id for list rendering
+                name: itemData.product_name || itemData.productName || itemData.name,
+                image: itemData.product_image || itemData.productImage || itemData.image || '/images/default-product.png',
+                price: itemData.price,
+                quantity: itemData.quantity
+              };
+            }) : [],
+            trackingNumber: orderData.tracking_number || orderData.trackingNumber || '',
+            estimatedDelivery: orderData.estimated_delivery || orderData.estimatedDelivery || '',
+            createdAt: this.formatDate(orderData.created_at || orderData.createdAt)
+          };
+        });
         
         console.log('Processed orders:', orders);
         const filteredOrders = this.filterOrders(orders, this.data.activeTab);

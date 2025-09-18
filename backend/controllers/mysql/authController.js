@@ -166,6 +166,15 @@ const wechatLogin = async (req, res) => {
       }
       
       // Create new user with WeChat profile information
+      console.log('Creating user with data:', {
+        username: userInfo.nickName,
+        password: 'wechat_user',
+        email: '',
+        phone: '',
+        wechatOpenId: openid,
+        avatar: userInfo.avatarUrl
+      });
+
       user = new User({
         username: userInfo.nickName,
         password: 'wechat_user', // Placeholder password (not used for WeChat login)
@@ -174,8 +183,13 @@ const wechatLogin = async (req, res) => {
         wechatOpenId: openid,
         avatar: userInfo.avatarUrl
       });
-      
+
+      console.log('Before saving user:', user);
+
       await user.save();
+
+      console.log('After saving user:', user);
+      console.log('User ID after save:', user.id, 'Type:', typeof user.id);
     } else {
       // Update user profile information if it has changed
       let needsUpdate = false;
@@ -197,15 +211,31 @@ const wechatLogin = async (req, res) => {
       if (needsUpdate) {
         await user.save();
       }
+      
+      console.log('Existing user ID:', user.id, 'Type:', typeof user.id);
     }
     
-    // Generate token
+    // Generate token using the database-generated ID
+    console.log('Generating token for user with ID:', user.id, 'Type:', typeof user.id);
     const token = generateToken(user);
+    
+    // Return user data with the correct ID type
+    const userResponse = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+    
+    console.log('User response ID:', userResponse.id, 'Type:', typeof userResponse.id);
     
     res.json({
       message: 'WeChat login successful',
       token,
-      user: user.toJSON()
+      user: userResponse
     });
   } catch (error) {
     console.error('WeChat login error:', error);
@@ -303,8 +333,16 @@ const wechatMobileLogin = async (req, res) => {
 
     if (!user) {
       // Create new user with phone number
+      // Generate a unique username based on phone number
+      let username = `user_${phoneNumber}`;
+      let counter = 1;
+      while (await User.findOne({ username: username })) {
+        username = `user_${phoneNumber}_${counter}`;
+        counter++;
+      }
+      
       user = new User({
-        username: `user_${Date.now()}`, // Generate unique username
+        username: username,
         password: 'wechat_mobile_user', // Placeholder password (not used for mobile login)
         phone: phoneNumber,
         wechatOpenId: openid,
@@ -318,13 +356,24 @@ const wechatMobileLogin = async (req, res) => {
       await user.save();
     }
 
-    // Generate token
+    // Generate token using the database-generated ID
     const token = generateToken(user);
+
+    // Return user data with the correct ID type
+    const userResponse = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
 
     res.json({
       message: 'WeChat mobile login successful',
       token,
-      user: user.toJSON()
+      user: userResponse
     });
   } catch (error) {
     console.error('WeChat mobile login error:', error);

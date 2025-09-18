@@ -6,44 +6,6 @@
       <text class="login-subtitle">Please sign in to continue</text>
     </view>
 
-    <form class="login-form">
-      <view class="input-group">
-        <input 
-          class="input-field" 
-          placeholder="Username" 
-          value="{{username}}" 
-          bindinput="onUsernameInput"
-        />
-      </view>
-
-      <view class="input-group">
-        <input 
-          class="input-field" 
-          placeholder="Password" 
-          password="{{true}}" 
-          value="{{password}}" 
-          bindinput="onPasswordInput"
-        />
-      </view>
-
-      <view wx:if="{{errorMessage}}" class="error-message">
-        {{errorMessage}}
-      </view>
-
-      <button 
-        class="login-button button-primary" 
-        bindtap="onLogin" 
-        loading="{{loading}}"
-        disabled="{{loading}}"
-      >
-        Sign In
-      </button>
-    </form>
-
-    <view class="divider">
-      <text class="divider-text">or</text>
-    </view>
-
     <!-- WeChat Authorization Login Button -->
     <button 
       class="wechat-login-button" 
@@ -59,28 +21,6 @@
     <!-- Instructional text for WeChat login -->
     <view class="instruction-text">
       <text>Tapping above will prompt for profile access. Please allow access to login with your WeChat profile.</text>
-    </view>
-
-    <view class="divider">
-      <text class="divider-text">or</text>
-    </view>
-
-    <!-- WeChat Mobile Login Button -->
-    <button 
-      class="wechat-login-button" 
-      open-type="getPhoneNumber"
-      bindgetphonenumber="onWeChatMobileLogin"
-      hover-class="button-hover"
-      loading="{{wechatLoading}}"
-      disabled="{{wechatLoading}}"
-    >
-      <image class="wechat-icon" src="/images/wechat_icon.png" mode="aspectFit" />
-      <text class="wechat-login-text">Login with WeChat Mobile</text>
-    </button>
-    
-    <!-- Instructional text for WeChat mobile login -->
-    <view class="instruction-text">
-      <text>Tapping above will prompt for phone number access</text>
     </view>
 
     <view class="register-link">

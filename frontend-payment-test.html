@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Interface Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .order-summary {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .order-number {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: bold;
+        }
+        .item-quantity {
+            color: #666;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+        .pay-btn {
+            background-color: #07c160;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment Interface Display Test</h1>
+    
+    <div class="order-summary">
+        <div class="order-number">Order #<span id="orderNumber">Loading...</span></div>
+        
+        <div class="order-items" id="orderItems">
+            <!-- Items will be populated here -->
+        </div>
+        
+        <div class="order-totals">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>$<span id="subtotal">0.00</span></span>
+            </div>
+            <div class="total-row">
+                <span>Shipping:</span>
+                <span>$<span id="shippingFee">0.00</span></span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Total:</span>
+                <span class="total-amount">$<span id="totalAmount">0.00</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <button class="pay-btn" id="payButton">
+        Pay Now - $<span id="payButtonAmount">0.00</span>
+    </button>
+
+    <script>
+        // Simulate fetching order data from the backend
+        fetch('http://localhost:3000/api/orders/1')
+            .then(response => response.json())
+            .then(data => {
+                const order = data.data;
+                console.log('Order data:', order);
+                
+                // Populate order number
+                document.getElementById('orderNumber').textContent = order.orderNumber;
+                
+                // Populate items
+                const orderItemsContainer = document.getElementById('orderItems');
+                orderItemsContainer.innerHTML = '';
+                
+                order.items.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'item';
+                    itemElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${item.productName}</div>
+                            <div class="item-quantity">Quantity: ${item.quantity}</div>
+                        </div>
+                        <div class="item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+                    `;
+                    orderItemsContainer.appendChild(itemElement);
+                });
+                
+                // Populate financial information
+                document.getElementById('subtotal').textContent = order.subtotal.toFixed(2);
+                document.getElementById('shippingFee').textContent = order.shippingFee.toFixed(2);
+                document.getElementById('totalAmount').textContent = order.totalAmount.toFixed(2);
+                
+                // Populate pay now button amount
+                document.getElementById('payButtonAmount').textContent = order.totalAmount.toFixed(2);
+                
+                console.log('✅ Payment interface populated successfully!');
+            })
+            .catch(error => {
+                console.error('Error fetching order data:', error);
+                document.body.innerHTML = '<h1>Error loading payment interface</h1><p>' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>

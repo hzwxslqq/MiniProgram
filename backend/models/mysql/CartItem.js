@@ -9,8 +9,8 @@ class CartItem {
     this.product_name = data.product_name;
     this.product_image = data.product_image;
     this.price = data.price;
-    this.quantity = data.quantity;
-    this.selected = data.selected;
+    this.quantity = data.quantity || 1;  // Default quantity to 1
+    this.selected = data.selected !== undefined ? data.selected : true;  // Default selected to true
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
   }

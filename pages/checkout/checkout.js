@@ -22,8 +22,6 @@ Page({
   },
 
   onLoad: function(options) {
-    console.log('Checkout page loaded. Initial termsAccepted:', this.data.termsAccepted);
-    console.log('Initial data:', this.data);
     // Load cart items and calculate total
     this.loadCartItems();
     if (options.total) {
@@ -34,27 +32,21 @@ Page({
     
     // Load user addresses
     this.loadUserAddresses();
-    
-    console.log('Data after onLoad:', this.data);
   },
 
   onShow: function() {
-    console.log('Checkout page shown. Current termsAccepted:', this.data.termsAccepted);
   },
 
   // Handle label tap to toggle checkbox
   onLabelTap: function() {
-    console.log('Label tapped, toggling terms acceptance');
     const newTermsState = !this.data.termsAccepted;
     this.setData({
       termsAccepted: newTermsState
     });
-    console.log('Terms accepted is now:', this.data.termsAccepted);
   },
 
   // Test function to manually trigger checkbox change for debugging
   testCheckboxTrigger: function() {
-    console.log('Manually triggering checkbox change event');
     const mockEvent = {
       detail: {
         value: ['true']
@@ -63,20 +55,58 @@ Page({
     this.onTermsChange(mockEvent);
   },
 
+  // Manual refresh function for debugging
+  refreshCart: function() {
+    console.log('Manually refreshing cart items...');
+    this.loadCartItems();
+  },
+
   // Load cart items from API
   loadCartItems: function() {
+    console.log('=== LOADING CART ITEMS ===');
     api.cart.getList()
       .then(res => {
+        console.log('Cart items response:', res);
+        
+        // Check if response has data
+        if (!res || !res.data || !Array.isArray(res.data)) {
+          console.error('Invalid cart items response format');
+          return;
+        }
+        
+        console.log('Raw cart items from API:', res.data);
+        
         // Transform API response to match expected format
-        const cartItems = res.data.map(item => ({
-          id: item.id,
-          productId: item.productId,
-          name: item.productName,
-          image: item.productImage,
-          price: item.price,
-          quantity: item.quantity,
-          selected: item.selected !== undefined ? item.selected : true // Default to selected if not specified
-        }));
+        const cartItems = res.data.map(item => {
+          console.log('Processing cart item:', item);
+          
+          // Log each field to see what's available
+          console.log('Available fields in item:', Object.keys(item));
+          console.log('item.id:', item.id);
+          console.log('item.productId:', item.productId);
+          console.log('item.product_id:', item.product_id);
+          console.log('item.productName:', item.productName);
+          console.log('item.product_name:', item.product_name);
+          
+          return {
+            id: item.id,
+            productId: item.productId,  // This should be the correct field
+            name: item.productName,
+            image: item.productImage,
+            price: item.price,
+            quantity: item.quantity,
+            selected: item.selected !== undefined ? item.selected : true // Default to selected if not specified
+          };
+        });
+        
+        console.log('Transformed cart items:', cartItems);
+        
+        // Validate that all items have productId
+        for (let i = 0; i < cartItems.length; i++) {
+          if (!cartItems[i].productId) {
+            console.error(`Cart item ${i} missing productId after transformation:`, cartItems[i]);
+          }
+        }
         
         // Calculate total price
         let totalPrice = 0;
@@ -88,6 +118,9 @@ Page({
           cartItems: cartItems,
           totalPrice: totalPrice
         });
+        
+        console.log('Cart items loaded successfully');
+        console.log('Final cart items in data:', this.data.cartItems);
       })
       .catch(err => {
         console.error('Failed to load cart items:', err);
@@ -133,7 +166,11 @@ Page({
       })
       .catch(err => {
         console.error('Failed to load addresses:', err);
-        // Don't show error toast as this is not critical
+        wx.showToast({
+          title: 'Failed to load addresses: ' + (err.message || 'Unknown error'),
+          icon: 'none',
+          duration: 3000
+        });
       });
   },
 
@@ -177,17 +214,20 @@ Page({
       this.setData({
         selectedAddressIndex: -1,
         selectedAddressId: '',
-        selectedAddressName: ''
+        selectedAddressName: '',
+        shippingAddress: {
+          name: '',
+          phone: '',
+          address: '',
+          city: '',
+          postalCode: ''
+        }
       });
     }
   },
   
   // Handle checkbox change for terms acceptance
   onTermsChange: function(e) {
-    console.log('=== CHECKOUT PAGE ===');
-    console.log('onTermsChange function called with event:', e);
-    console.log('Event detail:', e.detail);
-    console.log('Event detail value:', e.detail.value);
     // For checkboxes, value is an array. If checked, it's ['true'], otherwise []
     // Handle different possible value structures
     let isChecked = false;
@@ -198,16 +238,88 @@ Page({
     } else if (typeof e.detail.value === 'string') {
       isChecked = e.detail.value === 'true';
     }
-    console.log('Terms checkbox changed. Checked:', isChecked, 'Value:', e.detail.value);
     this.setData({
       termsAccepted: isChecked  // Use actual checkbox state
     });
-    console.log('Terms accepted is now:', this.data.termsAccepted);
-    console.log('=====================');
   },
 
   // Place order
   onPlaceOrder: function() {
+    console.log('=== PLACE ORDER DEBUG ===');
+    console.log('Current cart items:', this.data.cartItems);
+    
+    // Check if cart items are loaded
+    if (!this.data.cartItems) {
+      console.error('Cart items not loaded yet');
+      wx.showToast({
+        title: 'Please wait, loading cart items...',
+        icon: 'none'
+      });
+      // Try to load cart items again
+      this.loadCartItems();
+      return;
+    }
+    
+    // Check if cart items array exists and has items
+    if (!Array.isArray(this.data.cartItems) || this.data.cartItems.length === 0) {
+      console.error('No cart items found or cart items is not an array');
+      wx.showToast({
+        title: 'Cart is empty',
+        icon: 'none'
+      });
+      // Try to load cart items again
+      this.loadCartItems();
+      return;
+    }
+    
+    // Deep validation of cart items
+    let hasInvalidItems = false;
+    const validatedCartItems = [];
+    
+    for (let i = 0; i < this.data.cartItems.length; i++) {
+      const item = this.data.cartItems[i];
+      console.log(`Item ${i + 1}:`, item);
+      
+      // Validate that all required fields exist
+      if (!item.hasOwnProperty('id') || !item.hasOwnProperty('productId') || 
+          !item.hasOwnProperty('name') || !item.hasOwnProperty('quantity')) {
+        console.error(`Item ${i + 1} missing required fields:`, item);
+        hasInvalidItems = true;
+        continue;
+      }
+      
+      // Validate that productId is valid
+      if (!item.productId || item.productId === 'undefined' || item.productId === 'null') {
+        console.error(`Item ${i + 1} has invalid productId:`, item.productId);
+        hasInvalidItems = true;
+        continue;
+      }
+      
+      // Add to validated items
+      validatedCartItems.push({
+        id: item.id,
+        productId: item.productId,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+        selected: item.selected
+      });
+    }
+    
+    if (hasInvalidItems) {
+      wx.showToast({
+        title: 'Invalid cart items, please refresh',
+        icon: 'none'
+      });
+      // Try to reload cart items
+      this.loadCartItems();
+      return;
+    }
+    
+    // Use validated cart items
+    const cartItems = validatedCartItems;
+    
     if (!this.validateForm()) {
       return;
     }
@@ -216,15 +328,43 @@ Page({
     
     // Create order
     const orderData = {
-      items: this.data.cartItems.map(item => ({
+      items: cartItems.map(item => ({
         productId: item.productId,
         quantity: item.quantity
       })),
       shippingAddress: this.data.shippingAddress
     };
+    
+    console.log('Order data being sent:', orderData);
+    
+    // Validate order data before sending
+    if (!orderData.items || orderData.items.length === 0) {
+      console.error('No items in order data');
+      wx.showToast({
+        title: 'No items to order',
+        icon: 'none'
+      });
+      this.setData({ loading: false });
+      return;
+    }
+    
+    // Check that all items have valid product IDs
+    for (let i = 0; i < orderData.items.length; i++) {
+      const item = orderData.items[i];
+      if (!item.productId || item.productId === 'undefined' || item.productId === 'null') {
+        console.error(`Order item ${i + 1} is missing or has invalid productId:`, item);
+        wx.showToast({
+          title: 'Invalid item in cart',
+          icon: 'none'
+        });
+        this.setData({ loading: false });
+        return;
+      }
+    }
 
     api.orders.create(orderData)
       .then(res => {
+        console.log('Order creation successful:', res);
         // Redirect to payment page with order ID
         wx.redirectTo({
           url: `/pages/payment/payment?orderId=${res.data.id}`

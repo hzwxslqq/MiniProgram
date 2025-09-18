@@ -41,9 +41,23 @@ Page({
     // Call API to get cart items
     api.cart.getList()
       .then(res => {
+        console.log('Cart items response:', res);
+        // Handle both cloud function and HTTP API responses
+        let cartData = [];
+        if (res.data) {
+          // HTTP API response
+          cartData = res.data;
+        } else if (res.result && res.result.cartItems) {
+          // Cloud function response
+          cartData = res.result.cartItems;
+        } else if (Array.isArray(res)) {
+          // Direct array response
+          cartData = res;
+        }
+        
         // Transform API response to match expected format
-        const cartItems = res.data.map(item => ({
-          id: item.id,
+        const cartItems = cartData.map(item => ({
+          id: item.id || item._id,
           productId: item.productId,
           name: item.productName,
           image: item.productImage,

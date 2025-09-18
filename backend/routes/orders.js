@@ -21,11 +21,11 @@ router.get('/', getOrders);
 // Get order by ID (no authentication required for testing)
 router.get('/:id', getOrderById);
 
-// Create order (no authentication required for testing)
-router.post('/', createOrder);
+// Create order (authentication required)
+router.post('/', authenticate, createOrder);
 
-// Process payment (no authentication required for testing)
-router.post('/:id/payment', processPayment);
+// Process payment (authentication required)
+router.post('/:id/payment', authenticate, processPayment);
 
 // Payment webhook (no authentication required)
 router.post('/payment-webhook', paymentWebhook);

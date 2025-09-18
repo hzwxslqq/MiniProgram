@@ -10,7 +10,6 @@ const getCartItems = async (req, res) => {
     const cartItems = await CartItem.find({ userId });
     
     res.json({
-      message: 'Cart items retrieved successfully',
       data: cartItems
     });
   } catch (error) {
@@ -57,13 +56,13 @@ const addItemToCart = async (req, res) => {
         productName: product.name,
         productImage: product.image,
         price: product.price,
-        quantity
+        quantity,
+        selected: true
       });
       await cartItem.save();
     }
     
     res.status(201).json({
-      message: 'Item added to cart successfully',
       data: cartItem
     });
   } catch (error) {
@@ -103,7 +102,6 @@ const updateCartItem = async (req, res) => {
     await cartItem.save();
     
     res.json({
-      message: 'Cart item updated successfully',
       data: cartItem
     });
   } catch (error) {

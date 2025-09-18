@@ -392,18 +392,20 @@ const removeByFilter = (collection, filter) => {
   const db = readDB();
   const items = db[collection] || [];
   const filteredItems = items.filter(item => {
+    // Keep item if it does NOT match all filter criteria
     for (const key in filter) {
       if (item[key] !== filter[key]) {
-        return true; // Keep item
+        return true; // Keep item (doesn't match this filter criterion)
       }
     }
-    return false; // Remove item
+    // If we get here, item matches all filter criteria, so remove it
+    return false;
   });
   
   db[collection] = filteredItems;
   writeDB(db);
   
-  return items.length !== filteredItems.length;
+  return items.length - filteredItems.length; // Return number of items removed
 };
 
 module.exports = {

@@ -9,8 +9,8 @@ class CartItem {
     this.productName = data.productName;
     this.productImage = data.productImage;
     this.price = data.price;
-    this.quantity = data.quantity;
-    this.selected = data.selected;
+    this.quantity = data.quantity || 1;
+    this.selected = data.selected !== undefined ? data.selected : true; // Default to selected
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

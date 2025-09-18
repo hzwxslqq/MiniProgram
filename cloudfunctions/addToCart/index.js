@@ -38,8 +38,8 @@ exports.main = async (event, context) => {
     
     // Check if item already exists in cart
     const cartItemResult = await db.collection('cart_items').where({
-      user_id: user._id,
-      product_id: event.productId
+      userId: user._id,
+      productId: event.productId
     }).get()
     
     if (cartItemResult.data.length > 0) {
@@ -50,7 +50,7 @@ exports.main = async (event, context) => {
       await db.collection('cart_items').doc(cartItem._id).update({
         data: {
           quantity: newQuantity,
-          updated_at: new Date()
+          updatedAt: new Date()
         }
       })
       
@@ -65,15 +65,15 @@ exports.main = async (event, context) => {
     } else {
       // Create new cart item
       const newCartItem = {
-        user_id: user._id,
-        product_id: event.productId,
-        product_name: product.name,
-        product_image: product.image,
+        userId: user._id,
+        productId: event.productId,
+        productName: product.name,
+        productImage: product.image,
         price: product.price,
         quantity: event.quantity || 1,
         selected: true,
-        created_at: new Date(),
-        updated_at: new Date()
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
       
       const createResult = await db.collection('cart_items').add({

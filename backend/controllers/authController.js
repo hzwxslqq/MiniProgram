@@ -11,91 +11,94 @@ const generateToken = (user) => {
   );
 };
 
-// Register controller
-const register = async (req, res) => {
+// WeChat authorization login controller
+const wechatLogin = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { code, userInfo } = req.body;
     
     // Validate input
-    if (!username || !password) {
+    if (!userInfo) {
       return res.status(400).json({ 
-        message: 'Username and password are required' 
+        message: 'Missing user info' 
       });
     }
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ 
-        message: 'Username already exists' 
-      });
+    // For development mode simulation
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    let openid;
+    
+    if (isDevelopment) {
+      // In development, use simulated openid
+      openid = 'simulated_openid_' + Date.now();
+    } else {
+      try {
+        // Get WeChat session (openid and session_key)
+        const sessionData = await getWeChatSession(code);
+        
+        if (!sessionData || !sessionData.openid) {
+          return res.status(500).json({ 
+            message: 'Failed to get WeChat session information' 
+          });
+        }
+        
+        openid = sessionData.openid;
+      } catch (wechatError) {
+        console.error('WeChat API error:', wechatError);
+        
+        // If WeChat API fails, fall back to simulation in development
+        if (isDevelopment) {
+          console.log('WeChat API failed, simulating response in development mode');
+          openid = 'simulated_openid_' + Date.now();
+        } else {
+          return res.status(500).json({ 
+            message: 'WeChat authorization failed: ' + (wechatError.message || 'Unknown error') 
+          });
+        }
+      }
     }
     
-    // Create user
-    const newUser = new User({
-      username,
-      password,
-      email
-    });
+    // Find user by WeChat openid
+    let user = await User.findOne({ wechatOpenId: openid });
     
-    await newUser.save();
-    
-    // Generate token
-    const token = generateToken(newUser);
-    
-    res.status(201).json({
-      message: 'User registered successfully',
-      token,
-      user: newUser.toJSON()
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
-      message: 'Internal server error' 
-    });
-  }
-};
-
-// Login controller
-const login = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    // Validate input
-    if (!username || !password) {
-      return res.status(400).json({ 
-        message: 'Username and password are required' 
-      });
-    }
-    
-    // Find user
-    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(401).json({ 
-        message: 'Invalid credentials' 
+      // Create new user with WeChat profile info
+      user = new User({
+        username: userInfo.nickName || `user_${Date.now()}`,
+        password: 'wechat_user', // Placeholder password (not used for WeChat login)
+        email: '', // Email is optional
+        phone: '', // Phone is optional
+        avatar: userInfo.avatarUrl || '',
+        wechatOpenId: openid
       });
-    }
-    
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ 
-        message: 'Invalid credentials' 
-      });
+      
+      await user.save();
     }
     
     // Generate token
     const token = generateToken(user);
     
+    // Return user data in the same format as the cloud function
+    const userResponse = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt
+    };
+    
     res.json({
-      message: 'Login successful',
-      token,
-      user: user.toJSON()
+      success: true,
+      token: token,
+      user: userResponse
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('WeChat login error:', error);
+    
     res.status(500).json({ 
-      message: 'Internal server error' 
+      message: 'WeChat login failed: ' + (error.message || 'Unknown error')
     });
   }
 };
@@ -234,7 +237,6 @@ const wechatMobileLogin = async (req, res) => {
 };
 
 module.exports = {
-  register,
-  login,
+  wechatLogin,
   wechatMobileLogin
 };

@@ -32,10 +32,10 @@ const initDB = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
-    
+
     // Add wechatOpenId column if it doesn't exist (for existing databases)
     try {
-      await pool.execute('ALTER TABLE users ADD COLUMN wechatOpenId VARCHAR(255) UNIQUE');
+      await pool.execute('ALTER TABLE users ADD COLUMN wechatOpenId VARCHAR(255) UNIQUE');      
       console.log('Added wechatOpenId column to users table');
     } catch (error) {
       // Column might already exist, ignore error
@@ -43,7 +43,7 @@ const initDB = async () => {
         console.log('Note: wechatOpenId column might already exist');
       }
     }
-    
+
     // Create products table
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS products (
@@ -65,7 +65,7 @@ const initDB = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
-    
+
     // Create cart_items table
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS cart_items (
@@ -84,7 +84,24 @@ const initDB = async () => {
         UNIQUE KEY unique_user_product (user_id, product_id)
       )
     `);
-    
+
+    // Create user_addresses table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS user_addresses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        city VARCHAR(100) NOT NULL,
+        postal_code VARCHAR(20) NOT NULL,
+        is_default BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // Create orders table
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS orders (
@@ -95,7 +112,7 @@ const initDB = async () => {
         subtotal DECIMAL(10, 2) NOT NULL,
         shipping_fee DECIMAL(10, 2) DEFAULT 0,
         total_amount DECIMAL(10, 2) NOT NULL,
-        status ENUM('pending', 'paid', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
+        status ENUM('pending', 'paid', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',  
         shipping_address JSON NOT NULL,
         payment_method VARCHAR(50) DEFAULT 'wechat_pay',
         payment_id VARCHAR(100),
@@ -106,9 +123,9 @@ const initDB = async () => {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
-    
+
     console.log('Database tables initialized successfully');
-    
+
     // Insert sample data if tables are empty
     await seedData();
   } catch (error) {
@@ -129,7 +146,7 @@ const seedData = async () => {
       );
       console.log('Admin user created');
     }
-    
+
     // Check if products table is empty
     const [productRows] = await pool.execute('SELECT COUNT(*) as count FROM products');
     if (productRows[0].count === 0) {
@@ -142,7 +159,7 @@ const seedData = async () => {
         ['Laptop Backpack', 'Spacious backpack with laptop compartment', 59.99, 79.99, '/images/product5.png', JSON.stringify(['/images/product5.png']), '3', 'Bags', 75, 4.6, 85, JSON.stringify(['bags', 'laptop', 'travel']), true],
         ['Water Bottle', 'Insulated water bottle that keeps drinks cold for 24 hours', 19.99, 29.99, '/images/product6.png', JSON.stringify(['/images/product6.png']), '4', 'Home', 150, 4.2, 142, JSON.stringify(['home', 'kitchen', 'hydration']), false]
       ];
-      
+
       for (const product of products) {
         await pool.execute(
           'INSERT INTO products (name, description, price, original_price, image, images, category_id, category_name, stock, rating, review_count, tags, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

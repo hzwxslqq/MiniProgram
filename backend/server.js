@@ -11,34 +11,48 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const { DB_TYPE } = require('./config/dbConfig');
 
 // Import database utilities based on configuration
-let db, User, Product, CartItem, Order;
+let db, User, Product, CartItem, Order, UserAddress;
 if (DB_TYPE === 'mysql') {
   db = require('./utils/mysql');
   User = require('./models/mysql/User');
   Product = require('./models/mysql/Product');
   CartItem = require('./models/mysql/CartItem');
   Order = require('./models/mysql/Order');
+  UserAddress = require('./models/mysql/UserAddress');
 } else {
   db = require('./utils/db');
   User = require('./models/User');
   Product = require('./models/Product');
   CartItem = require('./models/CartItem');
   Order = require('./models/Order');
+  UserAddress = require('./models/UserAddress');
 }
 
 // Initialize database
-if (DB_TYPE === 'mysql') {
-  db.initDB();
-} else {
-  db.initDB();
-}
+db.initDB();
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const cartRoutes = require('./routes/cart');
-const orderRoutes = require('./routes/orders');
-const addressRoutes = require('./routes/address');
+// Make models available globally for controllers
+global.User = User;
+global.Product = Product;
+global.CartItem = CartItem;
+global.Order = Order;
+global.UserAddress = UserAddress;
+
+// Import routes based on database configuration
+let authRoutes, productRoutes, cartRoutes, orderRoutes, addressRoutes;
+if (DB_TYPE === 'mysql') {
+  authRoutes = require('./routes/mysql/auth');
+  productRoutes = require('./routes/mysql/products');
+  cartRoutes = require('./routes/mysql/cart');
+  orderRoutes = require('./routes/mysql/orders');
+  addressRoutes = require('./routes/mysql/address');
+} else {
+  authRoutes = require('./routes/auth');
+  productRoutes = require('./routes/products');
+  cartRoutes = require('./routes/cart');
+  orderRoutes = require('./routes/orders');
+  addressRoutes = require('./routes/address');
+}
 
 // Initialize app
 const app = express();

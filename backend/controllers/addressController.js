@@ -1,12 +1,10 @@
-const UserAddress = require('../models/UserAddress');
-
 // Get all addresses for current user
 const getUserAddresses = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Get user addresses
-    const addresses = await UserAddress.find({ userId });
+    // Get user addresses (handle both file and MySQL database types)
+    const addresses = await global.UserAddress.find({ user_id: userId });
     
     res.json({
       message: 'Addresses retrieved successfully',
@@ -35,26 +33,44 @@ const createAddress = async (req, res) => {
     
     // If this is set as default, unset other default addresses for this user
     if (isDefault) {
-      const userAddresses = await UserAddress.find({ userId });
+      const userAddresses = await global.UserAddress.find({ user_id: userId });
       for (const addr of userAddresses) {
-        if (addr.isDefault) {
-          addr.isDefault = false;
+        // Handle both file and MySQL database types
+        const isDefaultField = addr.is_default !== undefined ? addr.is_default : addr.isDefault;
+        if (isDefaultField) {
+          // Set the correct field based on database type
+          if (addr.is_default !== undefined) {
+            addr.is_default = false;
+          } else {
+            addr.isDefault = false;
+          }
           await addr.save();
         }
       }
     }
     
-    // Create address
-    const userAddress = new UserAddress({
-      userId,
+    // Create address (handle both file and MySQL database types)
+    const userAddressData = {
+      user_id: userId,
       name,
       phone,
       address,
       city,
-      postalCode,
-      isDefault: isDefault || false
-    });
+      postal_code: postalCode,
+      is_default: isDefault || false
+    };
     
+    // If using file database, map fields correctly
+    if (global.UserAddress.name.includes('models/UserAddress')) {
+      userAddressData.userId = userAddressData.user_id;
+      userAddressData.postalCode = userAddressData.postal_code;
+      userAddressData.isDefault = userAddressData.is_default;
+      delete userAddressData.user_id;
+      delete userAddressData.postal_code;
+      delete userAddressData.is_default;
+    }
+    
+    const userAddress = new global.UserAddress(userAddressData);
     await userAddress.save();
     
     res.status(201).json({
@@ -77,8 +93,16 @@ const updateAddress = async (req, res) => {
     const { name, phone, address, city, postalCode, isDefault } = req.body;
     
     // Get address
-    const userAddress = await UserAddress.findById(id);
-    if (!userAddress || userAddress.userId != userId) {  // Using loose equality to match both "1" and 1
+    const userAddress = await global.UserAddress.findById(id);
+    if (!userAddress) {
+      return res.status(404).json({ 
+        message: 'Address not found' 
+      });
+    }
+    
+    // Check if address belongs to user (handle both file and MySQL database types)
+    const addressUserId = userAddress.user_id !== undefined ? userAddress.user_id : userAddress.userId;
+    if (addressUserId != userId) {  // Using loose equality to match both "1" and 1
       return res.status(404).json({ 
         message: 'Address not found or does not belong to user' 
       });
@@ -86,22 +110,43 @@ const updateAddress = async (req, res) => {
     
     // If this is set as default, unset other default addresses for this user
     if (isDefault) {
-      const userAddresses = await UserAddress.find({ userId });
+      const userAddresses = await global.UserAddress.find({ user_id: userId });
       for (const addr of userAddresses) {
-        if (addr.id !== id && addr.isDefault) {
-          addr.isDefault = false;
-          await addr.save();
+        if (addr.id !== id) {
+          // Handle both file and MySQL database types
+          const isDefaultField = addr.is_default !== undefined ? addr.is_default : addr.isDefault;
+          if (isDefaultField) {
+            // Set the correct field based on database type
+            if (addr.is_default !== undefined) {
+              addr.is_default = false;
+            } else {
+              addr.isDefault = false;
+            }
+            await addr.save();
+          }
         }
       }
     }
     
-    // Update address fields
+    // Update address fields (handle both file and MySQL database types)
     if (name) userAddress.name = name;
     if (phone) userAddress.phone = phone;
     if (address) userAddress.address = address;
     if (city) userAddress.city = city;
-    if (postalCode) userAddress.postalCode = postalCode;
-    if (isDefault !== undefined) userAddress.isDefault = isDefault;
+    if (postalCode) {
+      if (userAddress.postal_code !== undefined) {
+        userAddress.postal_code = postalCode;
+      } else {
+        userAddress.postalCode = postalCode;
+      }
+    }
+    if (isDefault !== undefined) {
+      if (userAddress.is_default !== undefined) {
+        userAddress.is_default = isDefault;
+      } else {
+        userAddress.isDefault = isDefault;
+      }
+    }
     
     await userAddress.save();
     
@@ -124,15 +169,23 @@ const deleteAddress = async (req, res) => {
     const { id } = req.params;
     
     // Get address
-    const userAddress = await UserAddress.findById(id);
-    if (!userAddress || userAddress.userId != userId) {  // Using loose equality to match both "1" and 1
+    const userAddress = await global.UserAddress.findById(id);
+    if (!userAddress) {
+      return res.status(404).json({ 
+        message: 'Address not found' 
+      });
+    }
+    
+    // Check if address belongs to user (handle both file and MySQL database types)
+    const addressUserId = userAddress.user_id !== undefined ? userAddress.user_id : userAddress.userId;
+    if (addressUserId != userId) {  // Using loose equality to match both "1" and 1
       return res.status(404).json({ 
         message: 'Address not found or does not belong to user' 
       });
     }
     
     // Delete address
-    await UserAddress.deleteById(id);
+    await global.UserAddress.deleteById(id);
     
     res.json({
       message: 'Address deleted successfully'
@@ -152,24 +205,45 @@ const setDefaultAddress = async (req, res) => {
     const { id } = req.params;
     
     // Get address
-    const userAddress = await UserAddress.findById(id);
-    if (!userAddress || userAddress.userId != userId) {  // Using loose equality to match both "1" and 1
+    const userAddress = await global.UserAddress.findById(id);
+    if (!userAddress) {
+      return res.status(404).json({ 
+        message: 'Address not found' 
+      });
+    }
+    
+    // Check if address belongs to user (handle both file and MySQL database types)
+    const addressUserId = userAddress.user_id !== undefined ? userAddress.user_id : userAddress.userId;
+    if (addressUserId != userId) {  // Using loose equality to match both "1" and 1
       return res.status(404).json({ 
         message: 'Address not found or does not belong to user' 
       });
     }
     
     // Unset other default addresses for this user
-    const userAddresses = await UserAddress.find({ userId });
+    const userAddresses = await global.UserAddress.find({ user_id: userId });
     for (const addr of userAddresses) {
-      if (addr.id !== id && addr.isDefault) {
-        addr.isDefault = false;
-        await addr.save();
+      if (addr.id !== id) {
+        // Handle both file and MySQL database types
+        const isDefaultField = addr.is_default !== undefined ? addr.is_default : addr.isDefault;
+        if (isDefaultField) {
+          // Set the correct field based on database type
+          if (addr.is_default !== undefined) {
+            addr.is_default = false;
+          } else {
+            addr.isDefault = false;
+          }
+          await addr.save();
+        }
       }
     }
     
-    // Set this address as default
-    userAddress.isDefault = true;
+    // Set this address as default (handle both file and MySQL database types)
+    if (userAddress.is_default !== undefined) {
+      userAddress.is_default = true;
+    } else {
+      userAddress.isDefault = true;
+    }
     await userAddress.save();
     
     res.json({

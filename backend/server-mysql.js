@@ -24,6 +24,7 @@ const authRoutes = require('./routes/mysql/auth');
 const productRoutes = require('./routes/mysql/products');
 const cartRoutes = require('./routes/mysql/cart');
 const orderRoutes = require('./routes/mysql/orders');
+const addressRoutes = require('./routes/mysql/address');
 
 // Initialize app
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/user/addresses', addressRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

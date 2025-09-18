@@ -1,23 +1,24 @@
+const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/db');
 
-// Order class
+// Order class for file-based database
 class Order {
   constructor(data) {
-    this.id = data.id;
-    this.userId = data.userId;
-    this.orderNumber = data.orderNumber;
-    this.items = data.items;
-    this.subtotal = data.subtotal;
-    this.shippingFee = data.shippingFee;
-    this.totalAmount = data.totalAmount;
-    this.status = data.status || 'pending'; // Set default status to pending
-    this.shippingAddress = data.shippingAddress;
-    this.paymentMethod = data.paymentMethod;
-    this.paymentId = data.paymentId;
-    this.trackingNumber = data.trackingNumber;
-    this.estimatedDelivery = data.estimatedDelivery;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
+    this.id = data.id || uuidv4();
+    this.userId = data.userId || data.user_id;
+    this.orderNumber = data.orderNumber || data.order_number || this.generateOrderNumber();
+    this.items = data.items || [];
+    this.subtotal = data.subtotal || 0;
+    this.shippingFee = data.shippingFee !== undefined ? data.shippingFee : (data.shipping_fee !== undefined ? data.shipping_fee : 0);
+    this.totalAmount = data.totalAmount !== undefined ? data.totalAmount : (data.total_amount !== undefined ? data.total_amount : 0);
+    this.status = data.status || 'pending';
+    this.shippingAddress = data.shippingAddress || data.shipping_address || {};
+    this.paymentMethod = data.paymentMethod || data.payment_method || 'wechat_pay';
+    this.paymentId = data.paymentId || data.payment_id || null;
+    this.trackingNumber = data.trackingNumber || data.tracking_number || null;
+    this.estimatedDelivery = data.estimatedDelivery || data.estimated_delivery || null;
+    this.createdAt = data.createdAt || data.created_at || new Date().toISOString();
+    this.updatedAt = data.updatedAt || data.updated_at || new Date().toISOString();
   }
   
   // Generate order number
@@ -32,81 +33,115 @@ class Order {
   
   // Save order
   async save() {
-    if (this.id) {
-      // Update existing order
-      const updatedOrder = db.update('orders', this.id, {
-        userId: this.userId,
-        orderNumber: this.orderNumber,
-        items: this.items,
-        subtotal: this.subtotal,
-        shippingFee: this.shippingFee,
-        totalAmount: this.totalAmount,
-        status: this.status,
-        shippingAddress: this.shippingAddress,
-        paymentMethod: this.paymentMethod,
-        paymentId: this.paymentId,
-        trackingNumber: this.trackingNumber,
-        estimatedDelivery: this.estimatedDelivery
-      });
-      Object.assign(this, updatedOrder);
-    } else {
-      // Create new order
-      // Generate order number if not provided
-      if (!this.orderNumber) {
-        this.orderNumber = this.generateOrderNumber();
+    try {
+      const orders = await db.read('orders');
+      const existingOrderIndex = orders.findIndex(order => order.id === this.id);
+      
+      if (existingOrderIndex !== -1) {
+        // Update existing order
+        orders[existingOrderIndex] = this;
+      } else {
+        // Create new order
+        orders.push(this);
       }
       
-      const newOrder = db.create('orders', {
-        userId: this.userId,
-        orderNumber: this.orderNumber,
-        items: this.items,
-        subtotal: this.subtotal,
-        shippingFee: this.shippingFee,
-        totalAmount: this.totalAmount,
-        status: this.status,
-        shippingAddress: this.shippingAddress,
-        paymentMethod: this.paymentMethod,
-        paymentId: this.paymentId,
-        trackingNumber: this.trackingNumber,
-        estimatedDelivery: this.estimatedDelivery
-      });
-      Object.assign(this, newOrder);
+      await db.write('orders', orders);
+      return true;
+    } catch (error) {
+      console.error('Error saving order:', error);
+      return false;
     }
-    return this;
   }
   
   // Static methods
   static async find(filter, options = {}) {
-    let orders = db.findByFilter('orders', filter);
-    
-    // Apply sorting
-    if (options.sort) {
-      const sortField = Object.keys(options.sort)[0];
-      const sortOrder = options.sort[sortField];
-      orders.sort((a, b) => {
-        if (sortOrder === -1) {
-          return new Date(b[sortField]) - new Date(a[sortField]);
-        } else {
-          return new Date(a[sortField]) - new Date(b[sortField]);
-        }
-      });
+    try {
+      const orders = await db.read('orders');
+      let filteredOrders = orders;
+      
+      // Apply filters
+      if (filter) {
+        filteredOrders = orders.filter(order => {
+          for (const key in filter) {
+            // Handle both camelCase and snake_case field names
+            const orderValue = order[key] !== undefined ? order[key] : 
+                              order[key.replace(/([A-Z])/g, '_$1').toLowerCase()];
+            if (orderValue != filter[key]) { // Using loose equality to match both "1" and 1
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+      
+      // Apply sorting
+      if (options.sort) {
+        const sortField = Object.keys(options.sort)[0];
+        const sortOrder = options.sort[sortField];
+        filteredOrders.sort((a, b) => {
+          // Handle both camelCase and snake_case field names
+          const aValue = a[sortField] !== undefined ? a[sortField] : 
+                        a[sortField.replace(/([A-Z])/g, '_$1').toLowerCase()];
+          const bValue = b[sortField] !== undefined ? b[sortField] : 
+                        b[sortField.replace(/([A-Z])/g, '_$1').toLowerCase()];
+          
+          if (sortOrder === -1) {
+            return new Date(bValue) - new Date(aValue); // Descending
+          } else {
+            return new Date(aValue) - new Date(bValue); // Ascending
+          }
+        });
+      }
+      
+      return filteredOrders.map(order => new Order(order));
+    } catch (error) {
+      console.error('Error finding orders:', error);
+      return [];
     }
-    
-    return orders.map(order => new Order(order));
   }
   
   static async findOne(filter) {
-    const orders = db.findByFilter('orders', filter);
-    if (orders.length === 0) return null;
-    
-    const order = orders[0];
-    return new Order(order);
+    try {
+      const orders = await this.find(filter);
+      return orders.length > 0 ? new Order(orders[0]) : null;
+    } catch (error) {
+      console.error('Error finding order:', error);
+      return null;
+    }
   }
   
   static async findById(id) {
-    const order = db.findById('orders', id);
-    if (!order) return null;
-    return new Order(order);
+    try {
+      const orders = await db.read('orders');
+      const order = orders.find(o => o.id === id);
+      return order ? new Order(order) : null;
+    } catch (error) {
+      console.error('Error finding order by ID:', error);
+      return null;
+    }
+  }
+  
+  static async deleteMany(filter) {
+    try {
+      const orders = await db.read('orders');
+      const filteredOrders = orders.filter(order => {
+        for (const key in filter) {
+          // Handle both camelCase and snake_case field names
+          const orderValue = order[key] !== undefined ? order[key] : 
+                            order[key.replace(/([A-Z])/g, '_$1').toLowerCase()];
+          if (orderValue != filter[key]) { // Using loose equality to match both "1" and 1
+            return true; // Keep this order (don't delete)
+          }
+        }
+        return false; // Delete this order
+      });
+      
+      await db.write('orders', filteredOrders);
+      return { deletedCount: orders.length - filteredOrders.length };
+    } catch (error) {
+      console.error('Error deleting orders:', error);
+      return { deletedCount: 0 };
+    }
   }
 }
 

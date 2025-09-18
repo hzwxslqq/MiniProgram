@@ -37,7 +37,7 @@ class Order {
         // Update existing order
         const [result] = await pool.execute(
           'UPDATE orders SET user_id = ?, order_number = ?, items = ?, subtotal = ?, shipping_fee = ?, total_amount = ?, status = ?, shipping_address = ?, payment_method = ?, payment_id = ?, tracking_number = ?, estimated_delivery = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-          [this.user_id, this.order_number, JSON.stringify(this.items), this.subtotal, this.shipping_fee, this.total_amount, this.status, JSON.stringify(this.shipping_address), this.payment_method, this.payment_id, this.tracking_number, this.estimated_delivery, this.id]
+          [this.user_id, this.order_number, JSON.stringify(this.items), this.subtotal, this.shipping_fee, this.total_amount, this.status, JSON.stringify(this.shipping_address), this.payment_method || 'wechat_pay', this.payment_id || null, this.tracking_number || null, this.estimated_delivery || null, this.id]
         );
         return result.affectedRows > 0;
       } else {
@@ -49,7 +49,7 @@ class Order {
         
         const [result] = await pool.execute(
           'INSERT INTO orders (user_id, order_number, items, subtotal, shipping_fee, total_amount, status, shipping_address, payment_method, payment_id, tracking_number, estimated_delivery) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [this.user_id, this.order_number, JSON.stringify(this.items), this.subtotal, this.shipping_fee, this.total_amount, this.status, JSON.stringify(this.shipping_address), this.payment_method, this.payment_id, this.tracking_number, this.estimated_delivery]
+          [this.user_id, this.order_number, JSON.stringify(this.items), this.subtotal, this.shipping_fee, this.total_amount, this.status, JSON.stringify(this.shipping_address), this.payment_method || 'wechat_pay', this.payment_id || null, this.tracking_number || null, this.estimated_delivery || null]
         );
         
         this.id = result.insertId;

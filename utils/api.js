@@ -108,14 +108,14 @@ const request = (options) => {
   if (isWeChatEnvironment() && options.useCloud !== false) {
     // Map HTTP endpoints to cloud function names
     const endpointMap = {
-      '/api/auth/login': 'login',
       '/api/auth/wechat-login': 'wechatLogin',
       '/api/products': 'getProducts',
-      '/api/cart': 'addToCart',
+      'GET:/api/cart': 'getCart',
+      'POST:/api/cart': 'addToCart',
       '/api/orders': 'createOrder'
     };
     
-    const functionName = endpointMap[options.url];
+    const functionName = endpointMap[options.url] || endpointMap[`${options.method}:${options.url}`];
     if (functionName) {
       return callCloudFunction(functionName, options.data)
         .catch((error) => {
@@ -132,29 +132,6 @@ const request = (options) => {
 
 // Authentication APIs
 const auth = {
-  login: (data) => {
-    if (isWeChatEnvironment()) {
-      // For WeChat login, we can use the login cloud function
-      return callCloudFunction('login', data)
-        .catch((error) => {
-          // Fallback to HTTP if cloud function fails
-          console.warn('Cloud function login failed, falling back to HTTP:', error.message);
-          return httpRequest({
-            url: '/api/auth/login',
-            method: 'POST',
-            data: data
-          });
-        });
-    } else {
-      // For regular login, use HTTP
-      return httpRequest({
-        url: '/api/auth/login',
-        method: 'POST',
-        data: data
-      });
-    }
-  },
-  
   // WeChat authorization login
   wechatLogin: (data) => {
     if (isWeChatEnvironment()) {
@@ -188,14 +165,6 @@ const auth = {
         data: data
       });
     }
-  },
-  
-  register: (data) => {
-    return httpRequest({
-      url: '/api/auth/register',
-      method: 'POST',
-      data: data
-    });
   },
   
   // WeChat mobile login
@@ -237,7 +206,7 @@ const products = {
     return httpRequest({
       url: `/api/products/${id}`,
       method: 'GET'
-    });
+      });
   },
   
   getCategories: () => {
@@ -251,10 +220,24 @@ const products = {
 // Cart APIs
 const cart = {
   getList: () => {
-    return httpRequest({
-      url: '/api/cart',
-      method: 'GET'
-    });
+    if (isWeChatEnvironment()) {
+      // Use cloud function for WeChat environment
+      return callCloudFunction('getCart')
+        .catch((error) => {
+          // Fallback to HTTP if cloud function fails
+          console.warn('Cloud function getCart failed, falling back to HTTP:', error.message);
+          return httpRequest({
+            url: '/api/cart',
+            method: 'GET'
+          });
+        });
+    } else {
+      // Use HTTP for non-WeChat environment
+      return httpRequest({
+        url: '/api/cart',
+        method: 'GET'
+      });
+    }
   },
   
   addItem: (data) => {

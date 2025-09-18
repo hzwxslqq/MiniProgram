@@ -4,7 +4,10 @@ const { pool } = require('../../utils/mysql');
 // User class for MySQL
 class User {
   constructor(data) {
-    this.id = data.id;
+    // Only set ID if it's provided (from database)
+    if (data.id !== undefined) {
+      this.id = data.id;
+    }
     this.username = data.username;
     this.password = data.password;
     this.email = data.email;
@@ -30,7 +33,7 @@ class User {
   // Save user
   async save() {
     try {
-      if (this.id) {
+      if (this.id && typeof this.id === 'number') {
         // Update existing user
         const [result] = await pool.execute(
           'UPDATE users SET username = ?, password = ?, email = ?, phone = ?, avatar = ?, wechatOpenId = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
