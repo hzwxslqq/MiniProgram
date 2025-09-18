@@ -22,10 +22,5 @@
     <view class="instruction-text">
       <text>Tapping above will prompt for profile access. Please allow access to login with your WeChat profile.</text>
     </view>
-
-    <view class="register-link">
-      <text>Don't have an account? </text>
-      <text class="register-text" bindtap="onRegister">Register</text>
-    </view>
   </view>
 </view>

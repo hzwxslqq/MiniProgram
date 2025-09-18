@@ -193,8 +193,37 @@ Page({
       content: 'Are you sure you want to cancel the payment? You can complete it later from the orders page.',
       success: (res) => {
         if (res.confirm) {
-          wx.navigateBack();
+          // Try to navigate back
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            // There are pages in the stack, navigate back
+            wx.navigateBack();
+          } else {
+            // No pages in stack, redirect to orders page
+            wx.redirectTo({
+              url: '/pages/orders/orders'
+            });
+          }
         }
+        // If res.cancel, do nothing (modal will close automatically)
+      },
+      fail: (err) => {
+        console.error('Modal failed:', err);
+        // Fallback navigation
+        wx.navigateBack({
+          fail: () => {
+            // If navigateBack fails, go to orders page
+            wx.redirectTo({
+              url: '/pages/orders/orders',
+              fail: () => {
+                // If all else fails, go to home tab
+                wx.switchTab({
+                  url: '/pages/home/home'
+                });
+              }
+            });
+          }
+        });
       }
     });
   }
